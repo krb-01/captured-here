@@ -5,7 +5,7 @@ import {LocationSearch} from '@/components/location-search';
 export default function Home() {
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Travel Books</h1>
+      <h1 className="text-2xl font-bold mb-4">GeoBook Explorer</h1>
       <LocationSearch />
       <BookList />
     </div>

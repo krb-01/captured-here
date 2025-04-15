@@ -1,6 +1,7 @@
 'use client';
 
 import {useState} from 'react';
+import {Label} from '@/components/ui/label';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 
 const continents = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica'];
@@ -54,8 +55,8 @@ export function LocationSearch() {
   return (
     <div className="flex flex-col space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700">Continent</label>
-        <Select onValueChange={handleContinentChange}>
+        <Label htmlFor="continent" className="block text-sm font-medium text-gray-700">Continent</Label>
+        <Select id="continent" onValueChange={handleContinentChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a continent" />
           </SelectTrigger>
@@ -70,8 +71,8 @@ export function LocationSearch() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Country</label>
-        <Select onValueChange={handleCountryChange} disabled={!continent}>
+        <Label htmlFor="country" className="block text-sm font-medium text-gray-700">Country</Label>
+        <Select id="country" onValueChange={handleCountryChange} disabled={!continent}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a country" />
           </SelectTrigger>
@@ -86,8 +87,8 @@ export function LocationSearch() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Region</label>
-        <Select onValueChange={handleRegionChange} disabled={!country}>
+        <Label htmlFor="region" className="block text-sm font-medium text-gray-700">Region</Label>
+        <Select id="region" onValueChange={handleRegionChange} disabled={!country}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a region" />
           </SelectTrigger>
