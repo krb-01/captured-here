@@ -3,11 +3,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   font-family: Roboto, sans-serif;
-}
-
-@layer base {
+  
   :root {
     --background: 220 13% 96%;
     --foreground: 240 10% 3.9%;
@@ -78,6 +80,7 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
+
 
 @layer base {
   * {
