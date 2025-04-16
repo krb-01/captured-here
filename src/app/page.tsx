@@ -24,8 +24,19 @@ export default function Home() {
       setSelectedCountry(country);
   };
   
+  const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'YOUR_VALUE_HERE',
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'YOUR_VALUE_HERE',
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'YOUR_VALUE_HERE',
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'YOUR_VALUE_HERE',
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_VALUE_HERE',
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'YOUR_VALUE_HERE',
+  };
+  
+
+
   useEffect(() => {
-    const app = initializeApp({});
+    const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const fetchBooks = async () => {
       setIsLoading(true);

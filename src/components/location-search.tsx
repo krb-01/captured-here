@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, } from 'react';
+import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { Label } from '@/components/ui/label';
 import { regions } from '@/utils/countries';
 import { ComposableMap, Geographies, Geography, Sphere, Graticule, ZoomableGroup } from 'react-simple-maps';
 import { geoCentroid, } from 'd3-geo';
 import world from 'world-atlas/countries-110m.json';
-import { mesh, feature } from 'topojson-client';
+import { mesh, feature, merge } from 'topojson-client';
 
 interface LocationSearchProps {
   onRegionChange: (region: string | null) => void;
@@ -43,12 +43,11 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onRegionChange, 
   };
 
   const handleCountryChange = (selectedOption: any) => {
-    const countries: any = { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: mesh(world as any, world.objects.countries) }] };
+    const countriesGeometry = merge(world as any, world.objects.countries);
+    const countries = feature(world, countriesGeometry);
     if (selectedOption) {
-
-
-      if (countries.features[0].geometry) {
-        const [longitude, latitude] = geoCentroid(countries.features[0].geometry);
+      if (countries.geometry) {
+        const [longitude, latitude] = geoCentroid(countries.geometry);
         setCentered([longitude, latitude]);
       }
 
@@ -107,12 +106,12 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({ onRegionChange, 
       <div className="w-1/3 pl-4">
         <div className="space-y-4" style={{ width: '200px' }}>
           <div className="space-y-2">
-            <Label htmlFor="region">Region</Label>
-            <Select options={regionOptions} onChange={handleRegionChange} placeholder="Select a Region" id="region" />
+            <Label htmlFor="region-select">Region</Label>
+            <Select options={regionOptions} onChange={handleRegionChange} placeholder="Select a Region" id="region-select" inputId="region-select" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="country">Country</Label>
-            <Select options={countryOptions} onChange={handleCountryChange} placeholder="Select a Country" isDisabled={!selectedRegion} id="country" />
+            <Label htmlFor="country-select">Country</Label>
+            <Select options={countryOptions} onChange={handleCountryChange} placeholder="Select a Country" isDisabled={!selectedRegion} id="country-select" inputId="country-select" />
           </div>
         </div>
       </div>
