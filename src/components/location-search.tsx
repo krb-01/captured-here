@@ -1,112 +1,121 @@
 'use client';
 
-import {useState} from 'react';
-import {Label} from '@/components/ui/label';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import { useState, useEffect, } from 'react';
+import Select from 'react-select';
+import { Label } from '@/components/ui/label';
+import { regions } from '@/utils/countries';
+import { ComposableMap, Geographies, Geography, Sphere, Graticule, ZoomableGroup } from 'react-simple-maps';
+import { geoCentroid, } from 'd3-geo';
+import world from 'world-atlas/countries-110m.json';
+import { mesh, feature } from 'topojson-client';
 
-const continents = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica'];
-const countriesByContinent: { [continent: string]: string[] } = {
-  'Africa': ['Egypt', 'Nigeria', 'South Africa'],
-  'Asia': ['China', 'India', 'Japan'],
-  'Europe': ['France', 'Germany', 'Spain'],
-  'North America': ['USA', 'Canada', 'Mexico'],
-  'South America': ['Brazil', 'Argentina', 'Colombia'],
-  'Oceania': ['Australia', 'New Zealand'],
-  'Antarctica': ['Antarctica'],
-};
-const regionsByCountry: { [country: string]: string[] } = {
-  'USA': ['Northeast', 'Midwest', 'South', 'West'],
-  'Canada': ['Ontario', 'Quebec', 'British Columbia'],
-  'Mexico': ['Yucatán Peninsula', 'Baja California', 'Central Highlands'],
-  'Egypt': ['Cairo', 'Alexandria', 'Giza'],
-  'Nigeria': ['Lagos', 'Abuja', 'Kano'],
-  'South Africa': ['Gauteng', 'Western Cape', 'KwaZulu-Natal'],
-  'China': ['Beijing', 'Shanghai', 'Guangdong'],
-  'India': ['Maharashtra', 'Delhi', 'Karnataka'],
-  'Japan': ['Tokyo', 'Osaka', 'Kyoto'],
-  'France': ['Île-de-France', 'Provence-Alpes-Côte d\'Azur', 'Nouvelle-Aquitaine'],
-  'Germany': ['Bavaria', 'North Rhine-Westphalia', 'Baden-Württemberg'],
-  'Spain': ['Madrid', 'Catalonia', 'Andalusia'],
-  'Australia': ['New South Wales', 'Victoria', 'Queensland'],
-  'New Zealand': ['Auckland', 'Wellington', 'Canterbury'],
-  'Antarctica': ['McMurdo Station', 'Amundsen-Scott South Pole Station'],
-};
+interface LocationSearchProps {
+  onRegionChange: (region: string | null) => void;
+  onCountryChange: (country: string | null) => void;
+}
 
-export function LocationSearch() {
-  const [continent, setContinent] = useState('');
-  const [country, setCountry] = useState('');
-  const [region, setRegion] = useState('');
+export const LocationSearch: React.FC<LocationSearchProps> = ({ onRegionChange, onCountryChange }): JSX.Element => {
+  const [selectedRegion, setSelectedRegion] = useState<{ region: string, countries: { name: string, code: string }[] } | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<{ name: string, code: string, label: string, value: string } | null>(null);
+  const [centered, setCentered] = useState<[number, number]>([0, 0]);
+  const [zoom, setZoom] = useState(1);
 
-  const handleContinentChange = (value: string) => {
-    setContinent(value);
-    setCountry('');
-    setRegion('');
+  const regionOptions = regions.map((region) => ({ 
+    value: region.region,
+    label: region.region,
+    countries: region.countries,
+  }));
+
+  const countryOptions = selectedRegion
+    ? selectedRegion.countries.map((country) => ({
+        value: country.code,
+        label: country.name,
+        ...country,
+      }))
+    : [];
+
+  const handleRegionChange = (selectedOption: any) => {
+    setSelectedRegion(selectedOption);
+    setSelectedCountry(null);
+    setZoom(1);
+
+    onRegionChange(selectedOption?.value ?? null);
   };
 
-  const handleCountryChange = (value: string) => {
-    setCountry(value);
-    setRegion('');
+  const handleCountryChange = (selectedOption: any) => {
+    const countries: any = { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: mesh(world as any, world.objects.countries) }] };
+    if (selectedOption) {
+
+
+      if (countries.features[0].geometry) {
+        const [longitude, latitude] = geoCentroid(countries.features[0].geometry);
+        setCentered([longitude, latitude]);
+      }
+
+        setSelectedCountry(selectedOption);
+        onCountryChange(selectedOption?.value ?? null);
+        setZoom(3);
+    } else {
+      onCountryChange(null);
+    }
   };
 
-  const handleRegionChange = (value: string) => {
-    setRegion(value);
-  };
+  const handleResetZoom = () => {
+    setZoom(1)
+    setCentered([0,0])
+  }
+
+
+    useEffect(() => {
+      handleResetZoom();
+    }, [selectedRegion?.region]);
+
 
   return (
-    <div className="flex flex-col space-y-4">
-      <div>
-        <Label htmlFor="continent" className="block text-sm font-medium text-gray-700">Continent</Label>
-        <Select id="continent" onValueChange={handleContinentChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a continent" />
-          </SelectTrigger>
-          <SelectContent>
-            {continents.map((continent) => (
-              <SelectItem key={continent} value={continent}>
-                {continent}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="flex">
+      {/* Map Section */}
+      <div className="w-2/3">
+        <ComposableMap
+          projection="geoMercator"
+          projectionConfig={{
+            center: centered,
+          }}
+        >
+          <ZoomableGroup zoom={zoom}>
+            <Sphere stroke="#e0e0e0" strokeWidth={0.5} fill="#f0f0f0" id="sphere" />
+            <Graticule stroke="#e0e0e0" strokeWidth={0.5} />
+            <Geographies geography={world} fill="#ddd" stroke="#e0e0e0">
+              {({ geographies }: { geographies: any }) =>
+                geographies.map((geo: any) => {
+                    const isSelected = selectedCountry ? selectedCountry.code === geo.properties?.iso_a2 : false;
+                    return (
+                      <Geography
+                        key={geo.rsmKey}
+                        geography={geo}
+                        fill={isSelected ? '#FF5733' : '#ddd'}
+                        stroke="#e0e0e0"
+                      />
+                    );
+                  })
+                }
+            </Geographies>
+          </ZoomableGroup>
+        </ComposableMap>
+      </div> 
 
-      <div>
-        <Label htmlFor="country" className="block text-sm font-medium text-gray-700">Country</Label>
-        <Select id="country" onValueChange={handleCountryChange} disabled={!continent}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a country" />
-          </SelectTrigger>
-          <SelectContent>
-            {countriesByContinent[continent]?.map((country) => (
-              <SelectItem key={country} value={country}>
-                {country}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="region" className="block text-sm font-medium text-gray-700">Region</Label>
-        <Select id="region" onValueChange={handleRegionChange} disabled={!country}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a region" />
-          </SelectTrigger>
-          <SelectContent>
-            {regionsByCountry[country]?.map((region) => (
-              <SelectItem key={region} value={region}>
-                {region}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {region && (
-        <div className="text-green-500">
-          You have selected: {region}, {country}, {continent}
+      {/* Pulldown Menus Section */}
+      <div className="w-1/3 pl-4">
+        <div className="space-y-4" style={{ width: '200px' }}>
+          <div className="space-y-2">
+            <Label htmlFor="region">Region</Label>
+            <Select options={regionOptions} onChange={handleRegionChange} placeholder="Select a Region" id="region" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="country">Country</Label>
+            <Select options={countryOptions} onChange={handleCountryChange} placeholder="Select a Country" isDisabled={!selectedRegion} id="country" />
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
-}
+};
