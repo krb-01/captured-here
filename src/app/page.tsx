@@ -82,6 +82,7 @@ export default function Home() {
       <LocationSearch
         onRegionChange={handleRegionChange}
         onCountryChange={handleCountryChange}
+        initialRegion={null}
       />
       <BookList books={books} isLoading={isLoading} error={error} />
       <h2 className="text-lg font-bold">New Books</h2>
