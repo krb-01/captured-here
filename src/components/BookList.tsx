@@ -1,6 +1,4 @@
-tsx
-// src/components/BookList.tsx
-import booksData from "@/lib/books.json";
+import booksData from '@/lib/books.json';
 
 const BookList = () => {
   return (

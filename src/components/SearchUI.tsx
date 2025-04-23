@@ -1,4 +1,3 @@
-tsx
 // src/components/SearchUI.tsx
 import countryList from "@/lib/country-list.json";
 
