@@ -1,91 +1,48 @@
 "use client";
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import * as topojson from 'topojson-client';
-import { Feature, GeometryCollection, GeoJsonProperties, Point, Geometry, Polygon, LineString, FeatureCollection, Geometry as GeoJSONGeometry, Position } from 'geojson';
-import { GeometryObject, Objects, Topology, Positions } from 'topojson-specification';
-
-interface WorldMap extends Topology<Objects<GeoJsonProperties>> {
-}
-
-const worldMap: WorldMap = {
-    type: "Topology",
-    transform: {
-        scale: [0.0005780688223651836, 0.0005780688223651836],
-        translate: [0, 0],
-    },
-    objects: {
-        land: {
-            type: "GeometryCollection",
-            geometries: [
-                { type: "Polygon", arcs: [[0]] } ,
-                { type: "Polygon", arcs: [[1]] } ,
-                { type: "Polygon", arcs: [[2]] } ,
-                { type: "Polygon", arcs: [[3]] } ,
-                { type: "Polygon", arcs: [[4]] } ,
-                { type: "Polygon", arcs: [[5]] } ,
-                { type: "Polygon", arcs: [[6]] } ,
-            ] 
-        }
-    },
-    arcs: [
-       [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]],
-       [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]],
-       [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]],
-       [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]],
-       [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]],
-       [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]],
-       [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]
-    ],
-};
-
+import { feature, mesh } from 'topojson-client';
+import { Topology } from 'topojson-specification';
 const Map = () => {
-    const svgRef = useRef<SVGSVGElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
-    useEffect(() => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const worldData = await fetch('/world/countries-110m.json');        
+        const world: any = await worldData.json();
+        console.log(world.objects)
+        const countryMesh = mesh(world, world.objects.countries);        
+        const land: any = feature(world, world.objects.land);
+
         if (svgRef.current) {
-            const svg = d3.select(svgRef.current);
-            const width = 800;
-            const height = 400;
-           // Geometryを作成する
-           const geometries: Geometry[] = [];
-           worldMap.arcs.forEach((arc, index) => {
-               geometries.push({
-                    type: "Polygon",
-                    coordinates: [arc]
-                } as Polygon)
-           })
-           const projection = d3.geoMercator().fitSize([width, height], { type: "GeometryCollection", geometries: geometries } as any);
-           const path = d3.geoPath().projection(projection);
+          const svg = d3.select(svgRef.current);
+          svg.selectAll('*').remove();
+          const width = svgRef.current.clientWidth;
+          const height = 600;
+          const projection = d3.geoMercator().fitSize([width, height], world.objects.land);
+          const geoPath = d3.geoPath();
 
-           // 新しいFeatureCollectionを作る
-           const newFeatureCollection: FeatureCollection = {
-               type: "FeatureCollection",
-               features: geometries.map((geometry, index) => {
-                   return {
-                       type: "Feature",
-                       geometry: geometry,
-                       properties: {}
-                   } as Feature
-               })
-           }
-           svg.append('g')
-               .selectAll('path')
-               .data(newFeatureCollection.features)
-               .enter()
-               .append('path')
-               .attr('d', (d) => path(d as any) || "")
-               .style('fill', '#e0e0e0')
-               .style('stroke', '#808080')
-               .style('stroke-width', 0.5);
+          svg.append('path')
+            .datum(countryMesh)
+            .attr('fill', 'none')
+            .attr('stroke', '#808080')
+            .attr('d', (d: any) => geoPath(d) ?? '');
+
         }
-    }, []);
+      } catch (error) {
+        console.error('Error fetching or processing world data:', error);
+      }
+    };
 
-    return (
-        <div style={{ width: '800px', height: '400px', overflow: 'hidden' }}>
-            <svg ref={svgRef} width={800} height={400} />
-        </div>
-    );
+    fetchData();
+  }, []);
+
+  return (
+    <div className="w-full border border-gray-300 rounded-lg">
+      <svg ref={svgRef} width="100%" height="600" className="bg-white"></svg>
+    </div>
+  );
 };
 
 export default Map;
