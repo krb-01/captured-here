@@ -11,25 +11,26 @@ const Map = () => {
       try {
         const worldData = await fetch('/world/countries-110m.json');        
         const world: any = await worldData.json();
-        console.log(world.objects)
-        const countryMesh = mesh(world, world.objects.countries);        
-        const land: any = feature(world, world.objects.land);
+        const countryMesh = mesh(world, world.objects.countries);
+        const land = feature(world, world.objects.countries);
+        const geoPath = d3.geoPath();
 
         if (svgRef.current) {
           const svg = d3.select(svgRef.current);
           svg.selectAll('*').remove();
-          const width = svgRef.current.clientWidth;
+          const width = 960;
           const height = 600;
-          const projection = d3.geoMercator().fitSize([width, height], world.objects.land);
-          const geoPath = d3.geoPath();
+          const projection = d3.geoMercator().fitSize([width, height], land);
+
 
           svg.append('path')
             .datum(countryMesh)
             .attr('fill', 'none')
-            .attr('stroke', '#808080')
+            .attr('stroke', 'black')
             .attr('d', (d: any) => geoPath(d) ?? '');
-
+          svg.append('path').datum(land).attr('d', geoPath).attr('fill', 'green').attr('stroke', 'black');
         }
+
       } catch (error) {
         console.error('Error fetching or processing world data:', error);
       }
@@ -40,7 +41,7 @@ const Map = () => {
 
   return (
     <div className="w-full border border-gray-300 rounded-lg">
-      <svg ref={svgRef} width="100%" height="600" className="bg-white"></svg>
+      <svg ref={svgRef} width="960" height="600" className="bg-white"></svg>
     </div>
   );
 };

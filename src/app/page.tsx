@@ -7,10 +7,10 @@ import Link from "next/link";
 export default function Home() {
     return (
         <main className="min-h-screen bg-white text-black">
-            <header className="w-full bg-[#212121] text-[#333333] sticky top-0 z-50 p-4">
+            <header className="w-full bg-[#212121] text-white sticky top-0 z-50 p-4">
                 <Link href="/" className="flex flex-col">
-                    <div className="text-3xl font-bold">Captured Here</div>
-                    <div className="text-sm">Photo & Art Book Finder</div>
+                    <div className="text-5xl font-bold">CAPTURED HERE</div>
+                    <div className="text-sm">Photography Book And Art Book Finder</div>
                 </Link>
             </header>
 
@@ -38,7 +38,7 @@ export default function Home() {
                         <Link href="/privacy-policy">Privacy Policy</Link>
                     </div>
                     <div className="text-xs">
-                        © {new Date().getFullYear()} Captured Here. All rights reserved.
+                        © {new Date().getFullYear()} CAPTURED HERE. All rights reserved.
                     </div>
                 </div>
             </section>
