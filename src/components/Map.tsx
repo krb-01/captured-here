@@ -1,36 +1,33 @@
 "use client";
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { feature, mesh } from 'topojson-client';
-import { Topology } from 'topojson-specification';
-const Map = () => {
+import { feature } from 'topojson-client';
+import * as d3geo from 'd3-geo-projection';
+
+const Map: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const worldData = await fetch('/world/countries-110m.json');        
+        const worldData = await fetch('/world/countries-110m.json');
         const world: any = await worldData.json();
-        const countryMesh = mesh(world, world.objects.countries);
         const land = feature(world, world.objects.countries);
-        const geoPath = d3.geoPath();
 
         if (svgRef.current) {
           const svg = d3.select(svgRef.current);
           svg.selectAll('*').remove();
-          const width = 960;
-          const height = 600;
-          const projection = d3.geoMercator().fitSize([width, height], land);
-
-
+          const width = svgRef.current.clientWidth;
+          const height = svgRef.current.clientHeight;
+          const projection = d3geo.geoMollweide().fitSize([width, height], land);
+          const geoPath = d3.geoPath().projection(projection);
+        
           svg.append('path')
-            .datum(countryMesh)
+            .datum(land)
             .attr('fill', 'none')
             .attr('stroke', 'black')
             .attr('d', (d: any) => geoPath(d) ?? '');
-          svg.append('path').datum(land).attr('d', geoPath).attr('fill', 'green').attr('stroke', 'black');
         }
-
       } catch (error) {
         console.error('Error fetching or processing world data:', error);
       }
@@ -40,8 +37,8 @@ const Map = () => {
   }, []);
 
   return (
-    <div className="w-full border border-gray-300 rounded-lg">
-      <svg ref={svgRef} width="960" height="600" className="bg-white"></svg>
+    <div className="h-[600px]">
+      <svg ref={svgRef} width="100%" height="100%" className="bg-white"></svg>
     </div>
   );
 };

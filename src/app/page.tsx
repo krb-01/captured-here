@@ -10,15 +10,15 @@ export default function Home() {
             <header className="w-full bg-[#212121] text-white sticky top-0 z-50 p-4">
                 <Link href="/" className="flex flex-col">
                     <div className="text-5xl font-bold">CAPTURED HERE</div>
-                    <div className="text-sm">Photography Book And Art Book Finder</div>
+                    <div className="text-sm">Photography and Art Book Finder</div>
                 </Link>
             </header>
 
             <section className="flex gap-4 p-4 bg-white">
-                <div className="w-3/5">
+                <div className="w-3/4">
                     <Map />
                 </div>
-                <div className="w-2/5">
+                <div className="w-1/4">
                     <SearchUI />
                 </div>
             </section>
