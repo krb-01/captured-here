@@ -1,49 +1,40 @@
-"use client";
-import React, { useState, ChangeEvent } from "react";
+"use client"
+import React, { useState, ChangeEvent, useEffect } from "react";
 import { continentCountries } from "@/utils/continentCountries";
 
 type ContinentCountries = typeof continentCountries;
 
-const SearchUI = () => {
+type SearchUIProps = {
+  setSelectedCountry: (country: string | null) => void;
+};
+
+const SearchUI: React.FC<SearchUIProps> = ({ setSelectedCountry }:SearchUIProps) => {
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<string | null>("-");
-
-  const getContinentByCountry = (country: string): string | null => {
-    for (const [continent, countries] of Object.entries(continentCountries)) {
-      if (countries.includes(country)) {
-        return continent;
-      }
-    }
-    return null;
-  };
-
+  const [localSelectedCountry, setLocalSelectedCountry] = useState<string | null>(null);
+  
   const handleContinentChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setSelectedContinent(event.target.value);
-    setSelectedCountry("-"); // 大陸が変わったら国をリセット
+    setLocalSelectedCountry(null)
   };
 
   const handleCountryChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const country: string = event.target.value;
-    setSelectedCountry(country);
-    if (!selectedContinent) {
-      const continent = getContinentByCountry(country);
-      if (continent) {
-        setSelectedContinent(continent as string | null);
-      }
-    }
+    const country: string | null = event.target.value;
+    setLocalSelectedCountry(country)
+    if(country){setSelectedCountry(country);}
   };
 
   const continents = Object.keys(continentCountries);
-  const countries = selectedContinent === "antarctica" || !selectedContinent ? ["-"] : continentCountries[selectedContinent as keyof ContinentCountries];
+  let countries = selectedContinent ? continentCountries[selectedContinent as keyof typeof continentCountries] : [];
+
+  const isCountrySelectDisabled = selectedContinent === "antarctica" || !selectedContinent;
 
   return (
     <div className="w-full">
       <div className="mb-4 text-black">Search by Region</div>
 
-      {/* 大陸プルダウン */}
       <div className="mb-4">
-        <select
-          value={selectedContinent || ""}
+         <select
+          value={selectedContinent ?? ""}
           onChange={handleContinentChange}
           className="w-full p-2 border border-gray-300 rounded-md"
         >
@@ -55,16 +46,14 @@ const SearchUI = () => {
           ))}
         </select>
       </div>
-
-      {/* 国プルダウン */}
       <div>
-        <select
-          value={selectedCountry || "-"}
+      <select
+          value={localSelectedCountry ?? ""}
           onChange={handleCountryChange}
-          className={`w-full p-2 border border-gray-300 rounded-md ${selectedContinent === "antarctica" || !selectedContinent ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={selectedContinent === "antarctica" || !selectedContinent}
-        >
-          {countries.map((country: string) => (
+          className={`w-full p-2 border border-gray-300 rounded-md ${isCountrySelectDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+          disabled={isCountrySelectDisabled}
+          >
+            <option value="-">Select Country</option>{countries.map((country) => (
             <option key={country} value={country}>
               {country}
             </option>
@@ -75,6 +64,4 @@ const SearchUI = () => {
     </div>
   );
 };
-
 export default SearchUI;
-

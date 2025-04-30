@@ -1,10 +1,17 @@
+
+"use client"
+
+import React, { useState } from "react";
 import BookList from "@/components/BookList";
 import Map from "@/components/Map";
 import SearchUI from "@/components/SearchUI";
 import NewBooks from "@/components/NewBooks";
 import Link from "next/link";
 
+
 export default function Home() {
+    const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+
     return (
         <main className="min-h-screen bg-white text-black">
             <header className="w-full bg-[#212121] text-white sticky top-0 z-50 p-4">
@@ -15,11 +22,11 @@ export default function Home() {
             </header>
 
             <section className="flex gap-4 p-4 bg-white">
-                <div className="w-3/4">
-                    <Map />
+                <div className="w-3/4" >
+                    <Map selectedCountry={selectedCountry} />
                 </div>
-                <div className="w-1/4">
-                    <SearchUI />
+                <div className="w-1/4" >
+                    <SearchUI setSelectedCountry={setSelectedCountry} />
                 </div>
             </section>
 
