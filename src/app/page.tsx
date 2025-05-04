@@ -1,19 +1,29 @@
 
 "use client"
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import BookList from "@/components/BookList";
 import Map from "@/components/Map";
 import SearchUI from "@/components/SearchUI";
 import NewBooks from "@/components/NewBooks";
 import Link from "next/link";
 
+import { getContinentByCountry } from '@/utils/continentCountries';
+
 
 export default function Home() {
-    const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+    const [selectedCountry, setLocalSelectedCountry] = useState<string | null>(null);
+    const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
 
+    const localSetSelectedCountry = useCallback((country: string | null) => {
+      setLocalSelectedCountry(country);
+      const continent = getContinentByCountry(country ?? "");
+      setSelectedContinent(continent);
+    }, []);
+    
     return (
         <main className="min-h-screen bg-white text-black">
+
             <header className="w-full bg-[#212121] text-white sticky top-0 z-50 p-4">
                 <Link href="/" className="flex flex-col">
                     <div className="text-5xl font-bold">CAPTURED HERE</div>
@@ -22,11 +32,15 @@ export default function Home() {
             </header>
 
             <section className="flex gap-4 p-4 bg-white">
-                <div className="w-3/4" >
-                    <Map selectedCountry={selectedCountry} />
+                <div className="w-3/4">
+                    <Map selectedCountry={selectedCountry} onCountryClick={localSetSelectedCountry} />
                 </div>
-                <div className="w-1/4" >
-                    <SearchUI setSelectedCountry={setSelectedCountry} />
+                <div className="w-1/4">
+                    <SearchUI
+                        setSelectedCountry={localSetSelectedCountry}
+                        clickedCountryName={selectedCountry}
+                        selectedContinent={selectedContinent}
+                        setSelectedContinent={setSelectedContinent} />
                 </div>
             </section>
 

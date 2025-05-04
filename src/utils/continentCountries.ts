@@ -1,51 +1,87 @@
-// src/utils/continentCountries.ts
 export const continentCountries = {
-  asia: [
-    "Afghanistan", "Armenia", "Azerbaijan", "Bahrain", "Bangladesh", "Bhutan",
-    "Brunei", "Cambodia", "China", "Cyprus", "Georgia", "India", "Indonesia",
-    "Iran", "Iraq", "Israel", "Japan", "Jordan", "Kazakhstan", "Kuwait",
-    "Kyrgyzstan", "Laos", "Lebanon", "Malaysia", "Maldives", "Mongolia",
-    "Myanmar", "Nepal", "North Korea", "Oman", "Pakistan", "Palestine",
-    "Philippines", "Qatar", "Saudi Arabia", "Singapore", "South Korea", "Sri Lanka",
-    "Syria", "Taiwan", "Tajikistan", "Thailand", "Timor-Leste", "Turkey",
-    "Turkmenistan", "United Arab Emirates", "Uzbekistan", "Vietnam", "Yemen", "Hong Kong", "Macau"
-  ],
-  europe: [
-    "Albania", "Andorra", "Austria", "Belarus", "Belgium", "Bosnia and Herzegovina",
-    "Bulgaria", "Croatia", "Czech Republic", "Denmark", "Estonia", "Finland",
-    "France", "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Italy",
-    "Latvia", "Liechtenstein", "Lithuania", "Luxembourg", "Malta", "Moldova",
-    "Monaco", "Montenegro", "Netherlands", "North Macedonia", "Norway", "Poland",
-    "Portugal", "Romania", "Russia", "San Marino", "Serbia", "Slovakia",
-    "Slovenia", "Spain", "Sweden", "Switzerland", "Ukraine", "United Kingdom",
-    "Vatican City", "Kosovo"
-  ],
-  africa: [
-    "Algeria", "Angola", "Benin", "Botswana", "Burkina Faso", "Burundi",
-    "Cabo Verde", "Cameroon", "Central African Republic", "Chad", "Comoros",
-    "Congo (Brazzaville)", "Congo (Kinshasa)", "Djibouti", "Egypt", "Equatorial Guinea",
-    "Eritrea", "Eswatini", "Ethiopia", "Gabon", "Gambia", "Ghana", "Guinea",
-    "Guinea-Bissau", "Kenya", "Lesotho", "Liberia", "Libya", "Madagascar", "Malawi",
-    "Mali", "Mauritania", "Mauritius", "Morocco", "Mozambique", "Namibia",
-    "Niger", "Nigeria", "Rwanda", "Sao Tome and Principe", "Senegal",
-    "Seychelles", "Sierra Leone", "Somalia", "South Africa", "South Sudan",
-    "Sudan", "Tanzania", "Togo", "Tunisia", "Uganda", "Zambia", "Zimbabwe","Western Sahara"
-  ],
-  northAmerica: [
-    "Antigua and Barbuda", "Bahamas", "Barbados", "Belize", "Canada", "Costa Rica",
-    "Cuba", "Dominica", "Dominican Republic", "El Salvador", "Grenada", "Guatemala",
-    "Haiti", "Honduras", "Jamaica", "Mexico", "Nicaragua", "Panama", "Saint Kitts and Nevis",
-    "Saint Lucia", "Saint Vincent and the Grenadines", "Trinidad and Tobago",
-    "United States", "Puerto Rico"
-  ],
-  southAmerica: [
-    "Argentina", "Bolivia", "Brazil", "Chile", "Colombia", "Ecuador", "Guyana",
-    "Paraguay", "Peru", "Suriname", "Uruguay", "Venezuela"
-  ],
-  oceania: [
-    "Australia", "Fiji", "Kiribati", "Marshall Islands", "Micronesia", "Nauru",
-    "New Zealand", "Palau", "Papua New Guinea", "Samoa", "Solomon Islands",
-    "Tonga", "Tuvalu", "Vanuatu", "Cook Islands", "Niue"
-  ],
-  antarctica: [],
+    'Africa': [
+        'Ethiopia', 'S. Sudan', 'Somalia', 'Kenya', 'Malawi', 'Tanzania',
+        'Somaliland', 'Morocco', 'W. Sahara', 'Congo', 'Dem. Rep. Congo',
+        'Namibia', 'South Africa', 'Libya', 'Tunisia', 'Zambia', 'Sierra Leone',
+        'Guinea', 'Liberia', 'Central African Rep.', 'Sudan', 'Djibouti',
+        'Eritrea', 'Côte d\'Ivoire', 'Mali', 'Senegal', 'Nigeria', 'Benin',
+        'Angola', 'Botswana', 'Zimbabwe', 'Chad', 'Algeria', 'Mozambique',
+        'eSwatini', 'Burundi', 'Rwanda', 'Uganda', 'Lesotho', 'Cameroon',
+        'Gabon', 'Niger', 'Burkina Faso', 'Togo', 'Ghana', 'Guinea-Bissau',
+        'Egypt', 'Mauritania', 'Eq. Guinea', 'Gambia', 'Bir Tawil',
+        'Madagascar', 'Comoros', 'São Tomé and Principe', 'Cabo Verde'
+    ],
+    'Asia': [
+        'Indonesia', 'Malaysia', 'Dhekelia', 'Cyprus', 'India', 'China',
+        'Israel', 'Palestine', 'Lebanon', 'Syria', 'South Korea', 'North Korea',
+        'Bhutan', 'Oman', 'Uzbekistan', 'Kazakhstan', 'Tajikistan', 'Mongolia',
+        'Vietnam', 'Cambodia', 'United Arab Emirates', 'Georgia', 'Azerbaijan',
+        'Turkey', 'Laos', 'Kyrgyzstan', 'Armenia', 'Iraq', 'Iran', 'Qatar',
+        'Saudi Arabia', 'Pakistan', 'Thailand', 'Kuwait', 'Timor-Leste',
+        'Brunei', 'Myanmar', 'Bangladesh', 'Afghanistan', 'Turkmenistan',
+        'Jordan', 'Nepal', 'Yemen', 'Hong Kong', 'N. Cyprus',
+        'Cyprus U.N. Buffer Zone', 'Siachen Glacier', 'Baikonur', 'Akrotiri',
+        'Philippines', 'Sri Lanka', 'Taiwan', 'Japan', 'Indian Ocean Ter.',
+        'Singapore', 'Bahrain', 'Spratly Is.', 'Macao', 'Scarborough Reef'
+    ],
+    'Europe': [
+        'France', 'Ukraine', 'Belarus', 'Lithuania', 'Russia', 'Czechia',
+        'Germany', 'Estonia', 'Latvia', 'Norway', 'Sweden', 'Finland',
+        'Luxembourg', 'Belgium', 'North Macedonia', 'Albania', 'Kosovo',
+        'Spain', 'Denmark', 'Romania', 'Hungary', 'Slovakia', 'Poland',
+        'Ireland', 'United Kingdom', 'Greece', 'Austria', 'Italy',
+        'Switzerland', 'Netherlands', 'Liechtenstein', 'Serbia', 'Croatia',
+        'Slovenia', 'Bulgaria', 'San Marino', 'Monaco', 'Andorra',
+        'Montenegro', 'Bosnia and Herz.', 'Portugal', 'Moldova', 'Gibraltar',
+        'Vatican', 'Iceland', 'Malta', 'Jersey', 'Guernsey', 'Isle of Man',
+        'Åland', 'Faeroe Is.'
+    ],
+    'North America': [
+        'Costa Rica', 'Nicaragua', 'St-Martin', 'Sint Maarten', 'Haiti',
+        'Dominican Rep.', 'El Salvador', 'Guatemala', 'USNB Guantanamo Bay',
+        'Cuba', 'Honduras', 'United States of America', 'Canada', 'Mexico',
+        'Belize', 'Panama', 'Greenland', 'Curaçao', 'Aruba', 'Bahamas',
+        'Turks and Caicos Is.', 'St. Pierre and Miquelon', 'Trinidad and Tobago',
+        'Grenada', 'St. Vin. and Gren.', 'Barbados', 'Saint Lucia', 'Dominica',
+        'U.S. Minor Outlying Is.', 'Montserrat', 'Antigua and Barb.',
+        'St. Kitts and Nevis', 'U.S. Virgin Is.', 'St-Barthélemy', 'Puerto Rico',
+        'Anguilla', 'British Virgin Is.', 'Jamaica', 'Cayman Is.', 'Bermuda',
+        'Bajo Nuevo Bank', 'Serranilla Bank'
+    ],
+    'South America': [
+        'Chile', 'Bolivia', 'Peru', 'Argentina', 'Suriname', 'Guyana',
+        'Brazil', 'Uruguay', 'Ecuador', 'Colombia', 'Paraguay',
+        'Brazilian I.', 'Venezuela', 'Southern Patagonian Ice Field',
+        'Falkland Is.'
+    ],
+    'Oceania': [
+        'Papua New Guinea', 'Australia', 'Fiji', 'New Zealand',
+        'New Caledonia', 'Pitcairn Is.', 'Fr. Polynesia', 'Kiribati',
+        'Marshall Is.', 'Norfolk Island', 'Cook Is.', 'Tonga',
+        'Wallis and Futuna Is.', 'Samoa', 'Solomon Is.', 'Tuvalu', 'Nauru',
+        'Micronesia', 'Vanuatu', 'Niue', 'American Samoa', 'Palau', 'Guam',
+        'N. Mariana Is.', 'Coral Sea Is.', 'Ashmore and Cartier Is.'
+    ],
+    'Seven seas (open ocean)': [
+        'Fr. S. Antarctic Lands', 'Seychelles', 'Heard I. and McDonald Is.',
+        'Saint Helena', 'Mauritius', 'Br. Indian Ocean Ter.', 'Maldives',
+        'S. Geo. and the Is.', 'Clipperton I.'
+    ],
+    'Antarctica': [
+        'Antarctica'
+    ]
 };
+
+export function getContinentByCountry(country: string): string | null {
+  const localCountry = country;
+  for (const continent in continentCountries) {
+    if (
+      continentCountries[continent as keyof typeof continentCountries].includes(
+        country
+      )
+    ) {
+      return continent;
+    }
+  }
+  return null;
+}

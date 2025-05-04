@@ -1,52 +1,78 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import * as d3 from "d3";
-import type { FeatureCollection, Geometry, GeoJsonProperties } from "geojson";
+import React, { useEffect, useRef } from "react";
+import * as d3 from 'd3';
+import type { FeatureCollection, Feature, Geometry, GeoJsonProperties } from "geojson";
 import { feature } from "topojson-client";
-
 import * as d3geo from "d3-geo-projection";
+import type { BaseType } from "d3";
 
 interface CountryProperties {
   name: string;
-  // 他のプロパティが必要であればここに追加
 }
 
-const Map: React.FC<{ selectedCountry: string | null }> = ({ selectedCountry }) => {
+const Map: React.FC<{ 
+  selectedCountry: string | null;
+  onCountryClick: (country: string) => void;
+}> = ({ selectedCountry, onCountryClick }) => { 
   const svgRef = useRef<SVGSVGElement>(null);
-
+  const localOnCountryClick = onCountryClick;
+  
   useEffect(() => {
     const fetchData = async () => {
+        if (!svgRef.current) return;
+      
       try {
-        const world: any = await d3.json("/world/countries-110m.json");
-
+        const world: any = await d3.json("/world/countries.topojson");
         const land = feature(world, world.objects.countries) as unknown as FeatureCollection<Geometry, GeoJsonProperties>;
+
         if (svgRef.current && land) {
           const svg = d3.select(svgRef.current);
-          const g = svg.append("g")
-          g.selectAll("*").remove();
+          let g = svg.select<SVGGElement>("g");
+
+          if (g.empty()) {
+            g = svg.append("g");
+          }
+
           const width = svgRef.current.clientWidth;
           const height = svgRef.current.clientHeight;
           const projection = d3geo.geoMollweide().fitSize([width, height], land);
           const geoPath = d3.geoPath().projection(projection);
-          g.selectAll("path").data(land.features).enter().append("path")
-            .attr("d", (d: any) => geoPath(d))
-            .attr("fill", (d: any) => (d.properties.name === selectedCountry ? "red" : "white"))
-            .attr("stroke", "black");        
+          const path = g.selectAll("path").data(land.features).join("path")
+
+          path
+            .attr("d", geoPath as any)
+            .attr("stroke", "black")
+            .attr("fill", function (d: any) {
+                return d.properties.name === selectedCountry ? "#0E3DF1" : "white"
+            })
+            .on("mouseover", function (event: MouseEvent, d: any) {
+              d3.select(event.currentTarget as SVGPathElement).attr("fill", "#0E3DF1");
+            })
+            .on("mouseout", function (event: MouseEvent, d: any) {
+              d3.select(this).attr("fill", function(d:any){
+                return d.properties.name === selectedCountry ? "#0E3DF1" : "white"
+              });
+            })
+            .on("click", function (this: BaseType | SVGPathElement, event:any, d: Feature<Geometry, GeoJsonProperties>) {
+              if (d.properties) {
+                localOnCountryClick(d.properties.name);
+              }
+
+            });
         }
-
-
       } catch (error) {
         console.error("Error fetching or processing world data:", error);
       }
     };
+    
     fetchData();
-    }, [selectedCountry]);
+  }, [selectedCountry, onCountryClick]);
 
-    return (
-      <div className="h-[600px] overflow-hidden">
-        <svg ref={svgRef} width="100%" height="100%" className="bg-white" ></svg>
-      </div>
-    );
-};
+  return (
+    <div className="h-[600px] overflow-hidden">
+      <svg ref={svgRef} width="100%" height="100%" className="bg-white" />
+    </div>
+  );
+}
 
 export default Map;

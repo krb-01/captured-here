@@ -6,22 +6,30 @@ type ContinentCountries = typeof continentCountries;
 
 type SearchUIProps = {
   setSelectedCountry: (country: string | null) => void;
+  clickedCountryName: string | null;
+  selectedContinent: string | null;
+  setSelectedContinent: (continent: string | null) => void;
 };
 
-const SearchUI: React.FC<SearchUIProps> = ({ setSelectedCountry }:SearchUIProps) => {
-  const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
-  const [localSelectedCountry, setLocalSelectedCountry] = useState<string | null>(null);
+const SearchUI: React.FC<SearchUIProps> = ({ setSelectedCountry, clickedCountryName, selectedContinent, setSelectedContinent }: SearchUIProps) => {
   
+  const [localSelectedCountry, setLocalSelectedCountry] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (clickedCountryName) setLocalSelectedCountry(clickedCountryName)
+  }, [clickedCountryName])
+
+
   const handleContinentChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setSelectedContinent(event.target.value);
     setLocalSelectedCountry(null)
   };
 
-  const handleCountryChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const handleCountryChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const country: string | null = event.target.value;
     setLocalSelectedCountry(country)
-    if(country){setSelectedCountry(country);}
-  };
+    setSelectedCountry(country);
+  }
 
   const continents = Object.keys(continentCountries);
   let countries = selectedContinent ? continentCountries[selectedContinent as keyof typeof continentCountries] : [];
@@ -33,7 +41,7 @@ const SearchUI: React.FC<SearchUIProps> = ({ setSelectedCountry }:SearchUIProps)
       <div className="mb-4 text-black">Search by Region</div>
 
       <div className="mb-4">
-         <select
+        <select
           value={selectedContinent ?? ""}
           onChange={handleContinentChange}
           className="w-full p-2 border border-gray-300 rounded-md"
@@ -47,13 +55,13 @@ const SearchUI: React.FC<SearchUIProps> = ({ setSelectedCountry }:SearchUIProps)
         </select>
       </div>
       <div>
-      <select
+        <select
           value={localSelectedCountry ?? ""}
           onChange={handleCountryChange}
           className={`w-full p-2 border border-gray-300 rounded-md ${isCountrySelectDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
           disabled={isCountrySelectDisabled}
-          >
-            <option value="-">Select Country</option>{countries.map((country) => (
+        >
+          <option value="-">Select Country</option>{countries.map((country) => (
             <option key={country} value={country}>
               {country}
             </option>
