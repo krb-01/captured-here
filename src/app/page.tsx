@@ -21,50 +21,48 @@ export default function Home() {
       setSelectedContinent(continent);
     }, []);
     
-    return (
-        <main className="min-h-screen bg-white text-black">
+    return (<><div className="flex flex-col bg-white">
 
-            <header className="w-full bg-[#212121] text-white sticky top-0 z-50 p-4">
-                <Link href="/" className="flex flex-col">
-                    <div className="text-5xl font-bold">CAPTURED HERE</div>
-                    <div className="text-sm">Photography and Art Book Finder</div>
-                </Link>
-            </header>
+        <header className="w-full text-white sticky top-0 z-50 p-4 bg-[#212121]">
+          <Link href="/" className="flex flex-col inline-block">
+              <div className="text-5xl font-bold ">CAPTURED HERE</div>
+              <div className="text-sm">Explore the World Through Photography Art Books</div>
+          </Link>
+        </header>
+        <section className="flex gap-4 p-4 items-start ">
+            <div className="w-4/5  mt-8 mb-8">
+                <Map selectedCountry={selectedCountry} onCountryClick={localSetSelectedCountry} />
+            </div>
+            <div className="w-1/5  mt-8 mb-8 mr-[7vw]">
+                <SearchUI setSelectedCountry={localSetSelectedCountry} clickedCountryName={selectedCountry} selectedContinent={selectedContinent} setSelectedContinent={setSelectedContinent} />
+            </div>
+        </section>
+      <main className="min-h-screen text-black">
 
-            <section className="flex gap-4 p-4 bg-white">
-                <div className="w-3/4">
-                    <Map selectedCountry={selectedCountry} onCountryClick={localSetSelectedCountry} />
-                </div>
-                <div className="w-1/4">
-                    <SearchUI
-                        setSelectedCountry={localSetSelectedCountry}
-                        clickedCountryName={selectedCountry}
-                        selectedContinent={selectedContinent}
-                        setSelectedContinent={setSelectedContinent} />
-                </div>
-            </section>
-
-            <section className="mb-4">
+          <section className="w-full bg-[#212121]">
+            <div className="max-w-[1280px] mx-auto">
                 <BookList />
-            </section>
+            </div>
+        </section>
 
-            <section className="mb-4">
-                <NewBooks />
-            </section>
+          <section className="w-full bg-gray-100">
+            <div className="max-w-[1280px] mx-auto">
+              <NewBooks />
+            </div>
+          </section>
 
-            <section className="w-full bg-black text-white text-sm p-4">
-                <div className="flex flex-col">
-                    <div className="flex gap-4 mb-2">
-                        <Link href="/about">About</Link>
-                        <Link href="/privacy-policy">Privacy Policy</Link>
-                    </div>
-                    <div className="text-xs">
-                        © {new Date().getFullYear()} CAPTURED HERE. All rights reserved.
-                    </div>
-                </div>
-            </section>
-
-        </main>
-    );
+      </main>
+      <footer className="w-full text-white text-sm p-4 bg-[#212121]">
+        <div className="flex flex-col items-center">
+              <div className="flex gap-4 mb-2">
+                  <Link className="hover:underline" href="/about">About</Link>
+                  <Link className="hover:underline" href="/privacy-policy">Privacy Policy</Link>
+              </div>
+              <div className="text-xs">
+                  © {new Date().getFullYear()} CAPTURED HERE. All rights reserved.
+              </div>
+          </div>
+        </footer>
+      </div></>
+  );
 }
-
