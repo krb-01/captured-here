@@ -7,30 +7,35 @@ const NewBooks = () => {
   );
 
   useEffect(() => {
-    const checkImages = async () => {
-      const updatedBooks = await Promise.all(
-         newBooks.map(async (book) => {
-          if (book.image_url) {
-            try {
-              const response = await fetch(book.image_url);
-              if (!response.ok) {
-                console.error(`Image load failed: ${book.image_url}`);
+    const checkImages = async () => { 
+        const updatedBooks = await Promise.all(
+          newBooks.map(async (book) => {
+            if (book.image_url) {
+              // Check if the image URL is the specific example URL
+              if (book.image_url.includes("example.com/images/book1.jpg")) {
                 return { ...book, hasError: true };
               }
-            } catch (error) {
-              console.error(`Image load failed: ${book.image_url}`, error);
-              return { ...book, hasError: true };
+              try {
+                const response = await fetch(book.image_url);
+                if (!response.ok) {
+                  console.error(`Image load failed: ${book.image_url}`);
+                  return { ...book, hasError: true };
+                }
+              } catch (error) {
+                console.error(`Image load failed: ${book.image_url}`, error);
+                return { ...book, hasError: true };
+              }
             }
-          }
-          return book;
-        })
-      );
-      setNewBooks(updatedBooks);
-    };
+            return book;
+          })
+        );
+        setNewBooks(updatedBooks);
+      };
+  
+      checkImages();
+    }, []);
 
-    
-    checkImages();
-  }, [newBooks]);
+
 
   return (
     <div className="pb-16">
@@ -55,7 +60,7 @@ const NewBooks = () => {
                 />
                 ) : book.image_url ? (
                   <img
-                    src="/file.svg"
+                    src="/window.svg"
                     alt="Fallback"
                     className="w-full aspect-square object-contain rounded-md"
                   />

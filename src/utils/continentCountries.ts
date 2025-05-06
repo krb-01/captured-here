@@ -68,7 +68,7 @@ export const continentCountries = {
         'S. Geo. and the Is.', 'Clipperton I.'
     ],
     'Antarctica': [
-        'Antarctica'
+        '-'
     ]
 };
 

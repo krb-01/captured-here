@@ -17,10 +17,20 @@ export default function Home() {
 
     const localSetSelectedCountry = useCallback((country: string | null) => {
       setLocalSelectedCountry(country);
-      const continent = getContinentByCountry(country ?? "");
-      setSelectedContinent(continent);
+        if (country) {
+            const continent = getContinentByCountry(country);
+            setSelectedContinent(continent);
+        }
     }, []);
-    
+
+    const onCountryClick = useCallback((country: string | null) => {
+        if(country){
+          setLocalSelectedCountry(country);
+          const continent = getContinentByCountry(country);
+          setSelectedContinent(continent);
+        }
+      }, []);
+
     return (<><div className="flex flex-col bg-white">
 
         <header className="w-full text-white sticky top-0 z-50 p-4 bg-[#212121]">
@@ -34,7 +44,7 @@ export default function Home() {
                 <Map selectedCountry={selectedCountry} onCountryClick={localSetSelectedCountry} />
             </div>
             <div className="w-1/5  mt-8 mb-8 mr-[7vw]">
-                <SearchUI setSelectedCountry={localSetSelectedCountry} clickedCountryName={selectedCountry} selectedContinent={selectedContinent} setSelectedContinent={setSelectedContinent} />
+                <SearchUI onCountryClick={onCountryClick} setSelectedCountry={localSetSelectedCountry} clickedCountryName={selectedCountry} selectedContinent={selectedContinent} setSelectedContinent={setSelectedContinent} />
             </div>
         </section>
       <main className="min-h-screen text-black">
