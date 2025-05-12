@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useCallback } from "react";
@@ -7,29 +6,39 @@ import Map from "@/components/Map";
 import SearchUI from "@/components/SearchUI";
 import NewBooks from "@/components/NewBooks";
 import Link from "next/link";
-
 import { getContinentByCountry } from '@/utils/continentCountries';
 
-
 export default function Home() {
-    const [selectedCountry, setLocalSelectedCountry] = useState<string | null>(null);
+    const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
     const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
 
-    const localSetSelectedCountry = useCallback((country: string | null) => {
-      setLocalSelectedCountry(country);
-        if (country) {
-            const continent = getContinentByCountry(country);
-            setSelectedContinent(continent);
+    const handleMapCountryClick = useCallback((country: string | null, continentFromMap: string | null) => {
+        // console.log("page.tsx: Map clicked", { country, continentFromMap });
+        if (country && country === "Antarctica") { 
+            setSelectedCountry("Antarctica"); 
+            setSelectedContinent("Antarctica");
+        } else if (country && country !== "Unknown") { 
+            const newContinent = getContinentByCountry(country);
+            setSelectedCountry(country);
+            setSelectedContinent(newContinent); 
+        } else {
+             console.warn("page.tsx: Map click on unknown, invalid, or non-country area. State not changed.");
         }
     }, []);
 
-    const onCountryClick = useCallback((country: string | null) => {
-        if(country){
-          setLocalSelectedCountry(country);
-          const continent = getContinentByCountry(country);
-          setSelectedContinent(continent);
+    const handleSearchSelection = useCallback((country: string | null, continent: string | null) => {
+        // console.log("page.tsx: SearchUI selection changed", { country, continent });
+        if (continent === "Antarctica") {
+            setSelectedCountry("Antarctica"); 
+            setSelectedContinent("Antarctica");
+        } else if (country && country !== "Unknown") { 
+            setSelectedCountry(country);
+            setSelectedContinent(getContinentByCountry(country)); 
+        } else { 
+            setSelectedCountry(null);
+            setSelectedContinent(continent);
         }
-      }, []);
+    }, []);
 
     return (<><div className="flex flex-col bg-white">
 
@@ -41,10 +50,18 @@ export default function Home() {
         </header>
         <section className="flex gap-4 p-4 items-start ">
             <div className="w-4/5  mt-8 mb-8">
-                <Map selectedCountry={selectedCountry} onCountryClick={localSetSelectedCountry} />
+                <Map 
+                    selectedCountry={selectedCountry} 
+                    selectedContinent={selectedContinent} 
+                    onCountryClick={handleMapCountryClick} 
+                />
             </div>
             <div className="w-1/5  mt-8 mb-8 mr-[7vw]">
-                <SearchUI onCountryClick={onCountryClick} setSelectedCountry={localSetSelectedCountry} clickedCountryName={selectedCountry} selectedContinent={selectedContinent} setSelectedContinent={setSelectedContinent} />
+                <SearchUI 
+                    selectedCountry={selectedCountry} 
+                    selectedContinent={selectedContinent} 
+                    onSelectionChange={handleSearchSelection} 
+                />
             </div>
         </section>
       <main className="min-h-screen text-black">

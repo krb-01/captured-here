@@ -1,75 +1,54 @@
 "use client"
 import React, { useState, ChangeEvent, useEffect } from "react";
-import { continentCountries } from "@/utils/continentCountries";
+import { continentCountries, getContinentByCountry } from "@/utils/continentCountries"; 
 
 type ContinentCountries = typeof continentCountries;
 const selectClassName = "w-full p-2 border border-gray-200 rounded-lg";
+
 type SearchUIProps = {
-  setSelectedCountry: (country: string | null) => void;
-  clickedCountryName: string | null;
+  selectedCountry: string | null;
   selectedContinent: string | null;
-  setSelectedContinent: (continent: string | null) => void;
-  onCountryClick: (country: string | null) => void;
+  onSelectionChange: (country: string | null, continent: string | null) => void; 
 };
-const SearchUI: React.FC<SearchUIProps> = ({ setSelectedCountry, selectedContinent, setSelectedContinent, onCountryClick }) => {
-  const [localSelectedCountry, setLocalSelectedCountry] = useState<string | null>(null);
+
+const SearchUI: React.FC<SearchUIProps> = ({ selectedCountry, selectedContinent, onSelectionChange }) => {
   const [isCountrySelectDisabled, setIsCountrySelectDisabled] = useState<boolean>(true);
   const [countries, setCountries] = useState<string[]>([]);
-
-    const localSetSelectedCountry = (country: string | null) => {
-      setLocalSelectedCountry(country);
-    };
+  
   const continents: string[] = Object.keys(continentCountries);
-  const [clickedCountryName, setClickedCountryName] = useState<string | null>(null);
-  
 
+  // 大陸プルダウンの変更ハンドラ
   const handleContinentChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedContinent(event.target.value);
-    setSelectedCountry(null)
-    setLocalSelectedCountry(null);
+    const newContinent = event.target.value === "" ? null : event.target.value;
+    // 国の選択をリセットし、新しい大陸を通知
+    onSelectionChange(null, newContinent); 
   };
-  useEffect(()=>{
-    setIsCountrySelectDisabled(!selectedContinent || selectedContinent === "Antarctica");
-  },[selectedContinent])
   
+  // 国プルダウンの変更ハンドラ
   const handleCountryChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const selectedCountry = event.target.value;
-     setLocalSelectedCountry(selectedCountry === "" ? null : selectedCountry);
-    if(setSelectedCountry){
-      setSelectedCountry(selectedCountry === "" ? null : selectedCountry);
+    const newCountry = event.target.value === "" ? null : event.target.value;
+    if (newCountry) {
+      // 国が選択された場合、その国と対応する大陸を通知
+      const continentForSelectedCountry = getContinentByCountry(newCountry);
+      onSelectionChange(newCountry, continentForSelectedCountry);
+    } else {
+      // 国の選択が解除された場合（例: "Select Country"が選択された）、
+      // 国をnullにし、現在の大陸選択は維持する
+      onSelectionChange(null, selectedContinent);
     }
   };
 
+  // selectedContinent prop の変更に応じて、国リストとプルダウンの有効/無効状態を更新
   useEffect(() => {
-    onCountryClick(localSelectedCountry)
-  }, [localSelectedCountry])
-
-  useEffect(() => {
-    if (selectedContinent && selectedContinent !== "") {
+    if (selectedContinent && selectedContinent !== "" && selectedContinent !== "Antarctica") {
       setCountries(continentCountries[selectedContinent as keyof ContinentCountries]);
-      if (localSelectedCountry === null && selectedContinent !== "Antarctica") {
-        setSelectedCountry(null);
-      }
+      setIsCountrySelectDisabled(false);
     } else {
-      setCountries([]);
+      setCountries([]); // 大陸が選択されていないか南極なら国リストを空にする
+      setIsCountrySelectDisabled(true);
     }
   }, [selectedContinent]);
-  
-  useEffect(() => {
-    if (clickedCountryName) {
-      const clickedCountryContinent = Object.keys(continentCountries).find(continent => {
-        return continentCountries[continent as keyof ContinentCountries].includes(clickedCountryName ?? "")
-      });
-      if (clickedCountryContinent) {
-         if(setSelectedCountry){
-           setSelectedCountry(clickedCountryName);
-         }
-      }
-      if (setSelectedContinent) {
-        setSelectedContinent(clickedCountryContinent ?? null)
-      }
-    }
-  }, [clickedCountryName, countries])
+
 
   const description = (<div className="text-center mt-4 mb-4">
     Select a continent and country to discover curated art photography monographs and regional works.
@@ -81,8 +60,8 @@ const SearchUI: React.FC<SearchUIProps> = ({ setSelectedCountry, selectedContine
       <div className="flex flex-col gap-2 mb-4 w-full ">
         <div className="mb-4"><select
             className={`${selectClassName}`}
-            value={selectedContinent ?? ""}
-              onChange={handleContinentChange}
+            value={selectedContinent ?? ""} // page.tsx から渡される selectedContinent を使用
+            onChange={handleContinentChange}
           >
             <option value="">Select Continent</option>            
             {continents.map((continent) => (              
@@ -93,18 +72,21 @@ const SearchUI: React.FC<SearchUIProps> = ({ setSelectedCountry, selectedContine
           </select> </div>
         <div>
           <select
-              value={localSelectedCountry ?? ""}
+              value={selectedCountry ?? ""} // page.tsx から渡される selectedCountry を使用
               onChange={handleCountryChange}
               className={`${selectClassName} ${isCountrySelectDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
               disabled={isCountrySelectDisabled}
             >
-              {selectedContinent !== "" && 
-                <option value="">
-                  {selectedContinent === "Antarctica" ? "-" : "Select Country"}
-                </option>
+              {/* 国選択の初期オプション表示ロジック */}
+              {(selectedContinent && selectedContinent !== "" && selectedContinent !== "Antarctica") && 
+                <option value="">Select Country</option>
               }
-
-
+              {selectedContinent === "Antarctica" && 
+                <option value="">-</option> 
+              }
+              {(!selectedContinent && countries.length === 0) && // 大陸未選択時は国リストも空のはず
+                 <option value="">Select Continent First</option>
+              }
               {countries.map((country) => (
                 <option key={country} value={country}>{country}</option>
               ))}
