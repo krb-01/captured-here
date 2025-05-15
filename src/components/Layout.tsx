@@ -10,9 +10,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <header className="w-full text-white sticky top-0 z-50 p-4 bg-[#212121]">
-        <Link href="/" className="flex flex-col inline-block">
+        <Link href="/" className="flex-col inline-block">
           <div className="text-5xl font-bold">CAPTURED HERE</div>
-          <div className="text-sm">Explore the World Through Photography Art Books</div>
+          <div className="text-sm pl-1 tracking-widest">Explore the World Through Photography Art Books</div>
         </Link>
       </header>
 

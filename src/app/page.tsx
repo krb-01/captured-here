@@ -61,7 +61,7 @@ export default function Home() {
         {/* BookListセクション: 背景色は全幅、コンテンツは中央揃え */}
         <section className="w-full bg-[#212121]">
           <div className="max-w-[1280px] mx-auto px-4 py-8">
-             <BookList continent={selectedContinent} country={selectedCountry}/>
+             <BookList continent={selectedContinent} country={selectedCountry} selectedContinent={selectedContinent}/>
           </div>
         </section>
 

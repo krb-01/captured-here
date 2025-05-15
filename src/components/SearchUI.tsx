@@ -58,7 +58,7 @@ const SearchUI: React.FC<SearchUIProps> = ({ selectedCountry, selectedContinent,
   }, [selectedContinent]);
 
   const description = (
-    <div className="text-center mt-4 mb-4">
+    <div className="hyphens-auto mt-2 mb-4 pl-1">
       Select a continent and country to discover curated art photography
       monographs and regional works.
     </div>
@@ -68,7 +68,7 @@ const SearchUI: React.FC<SearchUIProps> = ({ selectedCountry, selectedContinent,
     <div className="w-full text-black border border-gray-200 rounded-lg p-4 mb-2 ">
       {description}
       <div className="flex flex-col gap-2 mb-4 w-full ">
-        <div className="mb-4">
+        <div className="mb-3">
           <select
             className={`${selectClassName}`}
             value={selectedContinent ?? ""} // page.tsx から渡される selectedContinent を使用
