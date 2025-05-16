@@ -42,24 +42,21 @@ const BookList: React.FC<BookListProps> = ({ continent, country, selectedContine
 
   const [processedBooks, setProcessedBooks] = useState<Book[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
+  const [showDescriptionIsbn, setShowDescriptionIsbn] = useState<string | null>(null); // State for description overlay
 
   useEffect(() => {
-    // 画像チェック処理（一度だけ実行またはinitialBooks変更時）
     const checkImages = async () => {
       const booksToProcess = initialBooks.filter(book => !book.imageChecked);
       if (booksToProcess.length === 0) {
-        // すでに処理済みの場合は initialBooks をそのまま使う
-        // ただし、initialBooksが変更された場合は再処理が必要なので、
-        // processedBooksがinitialBooksと一致しない場合のみ更新する
-        if (JSON.stringify(processedBooks) !== JSON.stringify(initialBooks)){
-             setProcessedBooks(initialBooks);
+        if (JSON.stringify(processedBooks) !== JSON.stringify(initialBooks)) {
+          setProcessedBooks(initialBooks);
         }
         return;
       }
 
       const updatedBooks = await Promise.all(
         initialBooks.map(async (book) => {
-          if (book.imageChecked) return book; // 既にチェック済みならスキップ
+          if (book.imageChecked) return book;
           let hasError = book.hasError;
           if (book.image_url) {
             try {
@@ -80,16 +77,14 @@ const BookList: React.FC<BookListProps> = ({ continent, country, selectedContine
     };
 
     checkImages();
-  }, [initialBooks, processedBooks]); // initialBooksが変更されたら画像チェックを再実行
+  }, [initialBooks, processedBooks]);
 
   useEffect(() => {
-    // フィルタリング処理 (processedBooks, continent, country が変更されたら実行)
     if (processedBooks.length === 0 && initialBooks.length > 0 && !initialBooks.every(b => b.imageChecked)) {
-      // processedBooksがまだ空で、初期の本があり、まだ画像チェックが終わっていない場合は待機
       return;
     }
     
-    let newFilteredBooks = [...processedBooks]; // 画像処理済みの本をフィルタリング
+    let newFilteredBooks = [...processedBooks];
 
     if (continent) {
       newFilteredBooks = newFilteredBooks.filter(
@@ -108,9 +103,17 @@ const BookList: React.FC<BookListProps> = ({ continent, country, selectedContine
   if (continent) {
     title += ` - ${continent}`;
   }
-  if (country) {
+  if (country && continent !== 'Antarctica') {
     title += ` - ${country}`;
   }
+
+  const handleDescriptionToggle = (isbn: string) => {
+    if (showDescriptionIsbn === isbn) {
+      setShowDescriptionIsbn(null);
+    } else {
+      setShowDescriptionIsbn(isbn);
+    }
+  };
 
   return (
     <div className="pb-16">
@@ -133,9 +136,7 @@ const BookList: React.FC<BookListProps> = ({ continent, country, selectedContine
                       className="w-full aspect-square object-contain rounded-md"
                       onError={(e: any) => {
                         console.log("Image load error in Booklist for book:", book.title);
-                        // エラー発生時に filteredBooks の該当書籍の hasError を true に更新
                         setFilteredBooks(prevBooks => prevBooks.map(b => b.isbn === book.isbn ? {...b, hasError: true} : b));
-                        // 必要に応じて processedBooks や initialBooks も更新することを検討
                         setProcessedBooks(prevBooks => prevBooks.map(b => b.isbn === book.isbn ? {...b, hasError: true} : b));
                       }}
                     />
@@ -158,13 +159,42 @@ const BookList: React.FC<BookListProps> = ({ continent, country, selectedContine
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 mt-4 ">
-                <button className="bg-black text-white text-xs py-2 px-4 rounded-md hover:scale-105 transition-transform">
+                <button 
+                  className="bg-[#212121] text-white text-xs py-2 px-4 rounded-md hover:scale-105 transition-transform"
+                  onClick={() => handleDescriptionToggle(book.isbn)}
+                >
                   DESCRIPTION
                 </button>
                 <button className="bg-amber-500 text-white text-xs py-2 px-4 rounded-md hover:scale-105 transition-transform">
                   AVAILABLE ON AMAZON
                 </button>
               </div>
+              {showDescriptionIsbn === book.isbn && (
+                <div
+                  className="absolute inset-0 bg-[#212121]/[0.8] p-4 flex flex-col rounded-lg z-10"
+                  onClick={() => setShowDescriptionIsbn(null)} // Click on background closes
+                >
+                  <div
+                    className="flex flex-col h-full" // Inner container for content + new button layout
+                    onClick={(e) => e.stopPropagation()} // Prevent click on content from closing
+                  >
+                    <h4 className="font-bold text-lg mb-2 text-white">{book.title}</h4>
+                    <p className="text-sm text-white flex-grow break-words overflow-hidden">
+                      {book.description}
+                    </p>
+                    {/* New Close button layout mimicking the original DESCRIPTION button */}
+                    <div className="grid grid-cols-2 gap-2 mt-auto pt-4"> {/* Changed pt-4 to pt-6 */}
+                      <button
+                        className="bg-white text-black text-xs py-4 px-4 rounded-md hover:scale-105 transition-transform" /* Changed colors */
+                        onClick={() => setShowDescriptionIsbn(null)}
+                      >
+                        CLOSE
+                      </button>
+                      <div></div> {/* Empty div to occupy the second column for layout consistency */}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}

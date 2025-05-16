@@ -1,41 +1,77 @@
 import booksData from '@/lib/books.json';
 import { useState, useEffect } from 'react';
 
+// Define the book type based on books.json structure
+interface Book {
+  isbn: string;
+  title: string;
+  author: string;
+  published_on: string;
+  image_url?: string;
+  region: string;
+  country: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  hasError?: boolean;
+  imageChecked?: boolean;
+}
+
 const NewBooks = () => {
-  const [newBooks, setNewBooks] = useState(
-    booksData.slice(0, 4).map((book) => ({ ...book, hasError: false }))
-  );
+  const initialBooks = [...booksData]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 12)
+    .map((book) => ({ ...book, hasError: false, imageChecked: false }));
+
+  const [newBooks, setNewBooks] = useState<Book[]>(initialBooks);
+  const [showDescriptionIsbn, setShowDescriptionIsbn] = useState<string | null>(null); // Added state for description overlay
 
   useEffect(() => {
-    const checkImages = async () => { 
-        const updatedBooks = await Promise.all(
-          newBooks.map(async (book) => {
-            if (book.image_url) {
-              // Check if the image URL is the specific example URL
-              if (book.image_url.includes("example.com/images/book1.jpg")) {
-                return { ...book, hasError: true };
+    const booksToCheck = newBooks.filter(book => !book.imageChecked);
+    if (booksToCheck.length === 0) return;
+
+    const checkImages = async () => {
+      const updatedBookPromises = booksToCheck.map(async (book) => {
+        let currentHasError = false;
+        if (book.image_url) {
+          if (book.image_url.includes("example.com/images/book1.jpg")) {
+            currentHasError = true;
+          } else {
+            try {
+              const response = await fetch(book.image_url);
+              if (!response.ok) {
+                console.error(`Image load failed: ${book.image_url}`);
+                currentHasError = true;
               }
-              try {
-                const response = await fetch(book.image_url);
-                if (!response.ok) {
-                  console.error(`Image load failed: ${book.image_url}`);
-                  return { ...book, hasError: true };
-                }
-              } catch (error) {
-                console.error(`Image load failed: ${book.image_url}`, error);
-                return { ...book, hasError: true };
-              }
+            } catch (error) {
+              console.error(`Image load failed: ${book.image_url}`, error);
+              currentHasError = true;
             }
-            return book;
-          })
-        );
-        setNewBooks(updatedBooks);
-      };
-  
-      checkImages();
-    }, []);
+          }
+        }
+        return { ...book, hasError: currentHasError, imageChecked: true };
+      });
 
+      const checkedBooks = await Promise.all(updatedBookPromises);
 
+      setNewBooks(prevBooks =>
+        prevBooks.map(pb => {
+          const updatedVersion = checkedBooks.find(cb => cb.isbn === pb.isbn);
+          return updatedVersion || pb;
+        })
+      );
+    };
+
+    checkImages();
+  }, []); // Removed newBooks from dependency array to avoid re-triggering image checks on setNewBooks for description
+
+  const handleDescriptionToggle = (isbn: string) => {
+    if (showDescriptionIsbn === isbn) {
+      setShowDescriptionIsbn(null);
+    } else {
+      setShowDescriptionIsbn(isbn);
+    }
+  };
 
   return (
     <div className="pb-16">
@@ -54,31 +90,36 @@ const NewBooks = () => {
                   className="w-full aspect-square object-contain rounded-md"
                   onError={() => {
                     setNewBooks((prevBooks) =>
-                      prevBooks.map((b) => (b.isbn === book.isbn ? { ...b, hasError: true } : b))
+                      prevBooks.map((b) =>
+                        b.isbn === book.isbn ? { ...b, hasError: true, imageChecked: true } : b
+                      )
                     );
                   }}
                 />
-                ) : book.image_url ? (
-                  <img
-                    src="/window.svg"
-                    alt="Fallback"
-                    className="w-full aspect-square object-contain rounded-md"
-                  />
-                ) : (
-                  <div className="w-full h-48 bg-gray-200 rounded-md mb-2 flex justify-center items-center"><p className="text-gray-500">No image available</p></div>
-                
+              ) : book.image_url ? (
+                <img
+                  src="/window.svg"
+                  alt="Fallback image"
+                  className="w-full aspect-square object-contain rounded-md"
+                />
+              ) : (
+                <div className="w-full h-48 bg-gray-200 rounded-md mb-2 flex justify-center items-center">
+                  <p className="text-gray-500">No image available</p>
+                </div>
               )}
             </div>
-            <div className="mb-2 flex-1 ">
+            <div className="mb-2 flex-1">
               <p className="font-bold text-black">{book.title}</p>
               <p className="text-sm text-black">by {book.author}</p>
+              <p className="text-sm text-black">Country: {book.country}</p>
               <p className="text-xs text-black mt-1">
                 Published: {new Date(book.published_on).getFullYear()}
               </p>
-            </div>         
- <div className="grid grid-cols-2 gap-2 mt-4">
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-4">
               <button
                 className="bg-black text-white px-4 py-2 rounded text-xs hover:scale-105 transition-all duration-200"
+                onClick={() => handleDescriptionToggle(book.isbn)} // Added onClick handler
               >
                 DESCRIPTION
               </button>
@@ -88,6 +129,32 @@ const NewBooks = () => {
                 AVAILABLE ON AMAZON
               </button>
             </div>
+            {/* Copied Overlay JSX from BookList.tsx */}
+            {showDescriptionIsbn === book.isbn && (
+              <div
+                className="absolute inset-0 bg-[#212121]/[0.8] p-4 flex flex-col rounded-lg z-10"
+                onClick={() => setShowDescriptionIsbn(null)} // Click on background closes
+              >
+                <div
+                  className="flex flex-col h-full"
+                  onClick={(e) => e.stopPropagation()} // Prevent click on content from closing
+                >
+                  <h4 className="font-bold text-lg mb-2 text-white">{book.title}</h4>
+                  <p className="text-sm text-white flex-grow break-words overflow-hidden">
+                    {book.description}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mt-auto pt-4">
+                    <button
+                      className="bg-white text-black text-xs py-4 px-4 rounded-md hover:scale-105 transition-transform"
+                      onClick={() => setShowDescriptionIsbn(null)}
+                    >
+                      CLOSE
+                    </button>
+                    <div></div> 
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
