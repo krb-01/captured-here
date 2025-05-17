@@ -12,7 +12,7 @@ import continentCoordinates from "@/lib/continentCoordinates.json";
 interface CountryProperties {
   name: string;
   continent?: string;
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 type CountryFeature = Feature<Geometry, CountryProperties>;
@@ -28,31 +28,53 @@ interface MapProps {
   selectedCountry: string | null;
   selectedContinent: string | null;
   onCountryClick: (country: string | null, continent: string | null) => void;
+  onMapReady?: () => void; // New prop for signaling map readiness
 }
 
-const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountryClick }) => {
+const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountryClick, onMapReady }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [landFeatures, setLandFeatures] = useState<CountryFeature[]>([]);
   const projectionRef = useRef<d3.GeoProjection | null>(null);
   const geoPathRef = useRef<d3.GeoPath | null>(null);
   const gRef = useRef<SVGGElement | null>(null);
 
+  const [mapWidth, setMapWidth] = useState(0);
+  const [mapHeight, setMapHeight] = useState(0);
+  const [hasMapInitialized, setHasMapInitialized] = useState(false); // Flag for map initialization
+
   useEffect(() => {
-    const fetchData = async () => {
-      if (!svgRef.current) return;
+    if (!svgRef.current) return;
+    const resizeObserver = new ResizeObserver(entries => {
+      if (!entries || entries.length === 0) return;
+      const { width, height } = entries[0].contentRect;
+      setMapWidth(width);
+      setMapHeight(height);
+    });
+    resizeObserver.observe(svgRef.current);
+    setMapWidth(svgRef.current.clientWidth);
+    setMapHeight(svgRef.current.clientHeight);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (landFeatures.length === 0 && mapWidth > 0 && mapHeight > 0 && !hasMapInitialized) {
+      // Proceed to fetch data and draw only if not already initialized
+    } else {
+        return; 
+    }
+
+    const fetchDataAndDrawMap = async () => {
+      if (!svgRef.current || mapWidth === 0 || mapHeight === 0) return;
       try {
         const worldData = (await d3.json("/world/countries.json")) as WorldData;
         const land = topojsonFeature(
           worldData,
-          worldData.objects.ne_10m_admin_0_countries 
-        ) as FeatureCollection<Geometry, GeoJsonProperties>; 
-
+          worldData.objects.ne_10m_admin_0_countries
+        ) as FeatureCollection<Geometry, GeoJsonProperties>;
         const featuresWithContinent: CountryFeature[] = land.features
           .map((feature) => {
             const countryName = feature.properties?.NAME || feature.properties?.name || feature.properties?.ADMIN;
-            if (!countryName || typeof countryName !== 'string') {
-                return null; 
-            }
+            if (!countryName || typeof countryName !== 'string') return null;
             let continent: string = "";
             for (const continentEntry in continentCountries) {
               if (continentCountries[continentEntry as keyof typeof continentCountries].includes(countryName)) {
@@ -60,144 +82,119 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
                 break;
               }
             }
-            const properties: CountryProperties = {
-                ...(feature.properties as GeoJsonProperties), 
-                name: countryName, 
-                continent: continent,
-            };
-            return {
-              ...feature,
-              properties: properties,
-            } as CountryFeature; 
+            const properties: CountryProperties = { ...(feature.properties as GeoJsonProperties), name: countryName, continent: continent };
+            return { ...feature, properties: properties } as CountryFeature;
           })
           .filter((feature): feature is CountryFeature => feature !== null);
         setLandFeatures(featuresWithContinent);
 
         const svg = d3.select(svgRef.current);
-        const width = svgRef.current.clientWidth;
-        const height = svgRef.current.clientHeight;
-        projectionRef.current = d3geo.geoMollweide(); 
+        projectionRef.current = d3geo.geoMollweide();
         let g = svg.select<SVGGElement>("#map-group");
         if (g.empty()) {
           gRef.current = svg.append("g").attr("id", "map-group").node();
         } else {
           gRef.current = g.node();
         }
-        if (!gRef.current || featuresWithContinent.length === 0) return;
-        if (projectionRef.current && svgRef.current) { 
-            projectionRef.current.fitExtent([[0, 0], [width, height]], { type: "FeatureCollection", features: featuresWithContinent } as any);
-            geoPathRef.current = d3.geoPath(projectionRef.current); 
-        }
-        if (!geoPathRef.current) return; 
+        if (!gRef.current || featuresWithContinent.length === 0 || !projectionRef.current) return;
+        projectionRef.current.fitExtent([[0, 0], [mapWidth, mapHeight]], { type: "FeatureCollection", features: featuresWithContinent } as any);
+        geoPathRef.current = d3.geoPath(projectionRef.current);
+        if (!geoPathRef.current) return;
 
         d3.select(gRef.current)
           .selectAll<SVGPathElement, CountryFeature>("path.country")
-          .data(featuresWithContinent, (d) => d.properties.name) 
+          .data(featuresWithContinent, (d) => d.properties.name)
           .join(
             enter => enter.append("path")
               .attr("class", "country")
               .attr("d", geoPathRef.current as any)
               .attr("fill", "#212121") 
-              .on("mouseover", function (event, d) {
-                if (d.properties.name !== selectedCountry) {
-                  d3.select(this).attr("fill", "#0E3DF1");
-                }
+              .on("click", function (event, d) {
+                const name = d.properties.name;
+                const continent = d.properties.continent;
+                if (name && name !== "Unknown") onCountryClick(name, continent || null);
+                else onCountryClick(null, null);
+              })
+              .on("mouseover", function (event, d) { 
+                 if (d.properties.name !== selectedCountry) { d3.select(this).attr("fill", "#0E3DF1"); }
               })
               .on("mouseout", function (event, d) {
-                d3.select(this).attr("fill", d.properties.name === selectedCountry ? "#0E3DF1" : "#212121");
-              })
-              .on("click", function (event, d) {
-                const name = d.properties.name; 
-                const continent = d.properties.continent; 
-                if (name && name !== "Unknown") {
-                  onCountryClick(name, continent || null); 
-                } else {
-                  onCountryClick(null, null); 
-                }
+                 d3.select(this).attr("fill", d.properties.name === selectedCountry ? "#0E3DF1" : "#212121");
               })
               .style("stroke", "#fff")
               .style("stroke-width", "0.3"),
             update => update.attr("d", geoPathRef.current as any),
             exit => exit.remove()
           );
+        
+        // Signal that map has initialized
+        if (featuresWithContinent.length > 0 && gRef.current) {
+            onMapReady && onMapReady();
+            setHasMapInitialized(true);
+        }
+
       } catch (error) {
         console.error("Error loading or processing map data:", error);
       }
     };
-    fetchData();
+    fetchDataAndDrawMap();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, [mapWidth, mapHeight, onMapReady, hasMapInitialized]); // Added onMapReady and hasMapInitialized to deps
 
   useEffect(() => {
-    if (!svgRef.current || !projectionRef.current || !gRef.current || landFeatures.length === 0) {
-      return;
-    }
+    if (!svgRef.current || !projectionRef.current || !gRef.current || landFeatures.length === 0 || mapWidth === 0 || mapHeight === 0 || !hasMapInitialized) return;
     const g = d3.select(gRef.current);
-    const width = svgRef.current.clientWidth;
-    const height = svgRef.current.clientHeight;
     const projection = projectionRef.current;
     let targetFeatureForFitExtent: Feature<Geometry, CountryProperties> | FeatureCollection<Geometry, CountryProperties> | null = null;
-    let newRotation: [number, number, number] = [0, 0, 0]; 
-
-    if (selectedCountry) { // Handles Antarctica when selected as a "country"
+    let newRotation: [number, number, number] = [0, 0, 0];
+    if (selectedCountry) {
       const countryFeature = landFeatures.find(f => f.properties.name === selectedCountry);
       if (countryFeature) {
-        targetFeatureForFitExtent = countryFeature; 
+        targetFeatureForFitExtent = countryFeature;
         const centroid = d3.geoCentroid(countryFeature);
         newRotation = [-centroid[0], -centroid[1], 0];
-      } else { 
+      } else {
         targetFeatureForFitExtent = { type: "FeatureCollection", features: landFeatures } as FeatureCollection<Geometry, CountryProperties>;
       }
     } else if (selectedContinent && selectedContinent !== "Seven seas (open ocean)") {
-      // Note: Antarctica as a continent (when selectedCountry is null) is now handled by page.tsx setting selectedCountry="Antarctica"
-      // So this branch will mostly handle other continents.
       const coords = typedContinentCoordinates[selectedContinent as keyof typeof typedContinentCoordinates];
-      if (coords) { 
-        newRotation = [-coords.longitude, -coords.latitude, 0];
-      }
+      if (coords) newRotation = [-coords.longitude, -coords.latitude, 0];
       const continentFeatures = landFeatures.filter(f => f.properties.continent === selectedContinent);
-      if (continentFeatures.length > 0) {
-        targetFeatureForFitExtent = { type: "FeatureCollection", features: continentFeatures } as FeatureCollection<Geometry, CountryProperties>;
-      } else { 
-        targetFeatureForFitExtent = { type: "FeatureCollection", features: landFeatures } as FeatureCollection<Geometry, CountryProperties>;
-      }
-    } else { // No specific selection or unhandled continent like "Seven seas"
+      if (continentFeatures.length > 0) targetFeatureForFitExtent = { type: "FeatureCollection", features: continentFeatures } as FeatureCollection<Geometry, CountryProperties>;
+      else targetFeatureForFitExtent = { type: "FeatureCollection", features: landFeatures } as FeatureCollection<Geometry, CountryProperties>;
+    } else {
       targetFeatureForFitExtent = { type: "FeatureCollection", features: landFeatures } as FeatureCollection<Geometry, CountryProperties>;
     }
-    
-    projection.rotate(newRotation); 
-    
-    if (targetFeatureForFitExtent) {
-        projection.fitExtent([[0, 0], [width, height]], targetFeatureForFitExtent as any);
-    }
-    
+    projection.rotate(newRotation);
+    if (targetFeatureForFitExtent) projection.fitExtent([[0, 0], [mapWidth, mapHeight]], targetFeatureForFitExtent as any);
     geoPathRef.current = d3.geoPath(projection);
-
-    g.selectAll("path.country")
-      .transition()
-      .duration(300)
-      //.ease(d3.easeElasticOut) // イージング関数を指定
-      .attr("d", geoPathRef.current as any);
-
-  }, [selectedCountry, selectedContinent, landFeatures]); 
+    g.selectAll("path.country").transition().duration(300).attr("d", geoPathRef.current as any);
+  }, [selectedCountry, selectedContinent, landFeatures, mapWidth, mapHeight, hasMapInitialized]); // Added hasMapInitialized to deps
 
   useEffect(() => {
-    if (!gRef.current) return;
-    d3.select(gRef.current)
-      .selectAll<SVGPathElement, CountryFeature>("path.country")
+    if (!gRef.current || landFeatures.length === 0 || !hasMapInitialized) { // Added hasMapInitialized check
+      return;
+    }
+    const paths = d3.select(gRef.current)
+      .selectAll<SVGPathElement, CountryFeature>("path.country");
+
+    paths
       .attr("fill", (d) => {
-        if (d.properties.name === selectedCountry) { // This covers Antarctica if selectedCountry is "Antarctica"
-          return "#0E3DF1";
-        }
-        return "#212121";
+        return d.properties.name === selectedCountry ? "#0E3DF1" : "#212121";
       })
-      .on("mouseout", function (event, d) { 
+      .on("mouseover", function (event, d) {
+        if (d.properties.name !== selectedCountry) {
+          d3.select(this).attr("fill", "#0E3DF1");
+        }
+      })
+      .on("mouseout", function (event, d) {
         d3.select(this).attr("fill", d.properties.name === selectedCountry ? "#0E3DF1" : "#212121");
       });
-  }, [selectedCountry]); 
+
+  }, [selectedCountry, landFeatures, hasMapInitialized]); // Added hasMapInitialized to deps
 
   return (
-    <div className="h-[600px] overflow-hidden"> 
+    <div className="h-[600px] w-full">
       <svg ref={svgRef} width="100%" height="100%" />
     </div>
   );

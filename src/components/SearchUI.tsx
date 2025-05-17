@@ -1,115 +1,118 @@
-/** @format */
+import React, { useState, useEffect, useCallback } from 'react';
+import continentsFromFile from '@/lib/continentCoordinates.json';
+import allBooks from "@/lib/books.json";
+import { getContinentByCountry } from "@/utils/continentCountries";
 
-"use client";
-import React, { useState, ChangeEvent, useEffect } from "react";
-import { continentCountries, getContinentByCountry } from "@/utils/continentCountries";
-
-type ContinentCountries = typeof continentCountries;
-const selectClassName = "w-full p-2 border border-gray-200 rounded-lg";
-
-type SearchUIProps = {
-  selectedCountry: string | null;
+interface SearchUIProps {
   selectedContinent: string | null;
+  selectedCountry: string | null;
   onSelectionChange: (country: string | null, continent: string | null) => void;
-};
+  isSearchUIDisabled?: boolean;
+}
 
-const SearchUI: React.FC<SearchUIProps> = ({ selectedCountry, selectedContinent, onSelectionChange }) => {
-  const [isCountrySelectDisabled, setIsCountrySelectDisabled] = useState<boolean>(true);
+const SearchUI: React.FC<SearchUIProps> = ({
+  selectedContinent,
+  selectedCountry,
+  onSelectionChange,
+  isSearchUIDisabled,
+}) => {
   const [countries, setCountries] = useState<string[]>([]);
+  const [isCountrySelectDisabled, setIsCountrySelectDisabled] = useState(true);
+  const [currentSelectedCountry, setCurrentSelectedCountry] = useState<string | null>(null);
 
-  const continents: string[] = Object.keys(continentCountries);
-
-  // 大陸プルダウンの変更ハンドラ
-  const handleContinentChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const newContinent = event.target.value === "" ? null : event.target.value;
-    // 国の選択をリセットし、新しい大陸を通知
-    onSelectionChange(null, newContinent);
-  };
-
-  // 国プルダウンの変更ハンドラ
-  const handleCountryChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const newCountry = event.target.value === "" ? null : event.target.value;
-    if (newCountry) {
-      // 国が選択された場合、その国と対応する大陸を通知
-      const continentForSelectedCountry = getContinentByCountry(newCountry);
-      onSelectionChange(newCountry, continentForSelectedCountry);
-    } else {
-      // 国の選択が解除された場合（例: "Select Country"が選択された）、
-      // 国をnullにし、現在の大陸選択は維持する
-      onSelectionChange(null, selectedContinent);
-    }
-  };
-
-  // selectedContinent prop の変更に応じて、国リストとプルダウンの有効/無効状態を更新
   useEffect(() => {
-    if (
-      selectedContinent &&
-      selectedContinent !== "" &&
-      selectedContinent !== "Antarctica"
-    ) {
-      setCountries(
-        continentCountries[selectedContinent as keyof ContinentCountries]
-      );
+    if (selectedContinent === "Antarctica") { 
+      setCountries([]);
+      setIsCountrySelectDisabled(true); 
+    } else if (selectedContinent) {
+      const countryList = allBooks
+        .filter((book) => getContinentByCountry(book.country) === selectedContinent)
+        .map((book) => book.country)
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .sort();
+      setCountries(countryList);
       setIsCountrySelectDisabled(false);
     } else {
-      setCountries([]); // 大陸が選択されていないか南極なら国リストを空にする
+      setCountries([]);
       setIsCountrySelectDisabled(true);
     }
+    setCurrentSelectedCountry(null); 
   }, [selectedContinent]);
 
-  const description = (
-    <div className="hyphens-auto mt-2 mb-4 pl-1">
-      Select a continent and country to discover curated art photography
-      monographs and regional works.
-    </div>
-  );
+  useEffect(() => {
+    setCurrentSelectedCountry(selectedCountry);
+  }, [selectedCountry]);
+
+  const handleContinentChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newContinent = event.target.value || null;
+    onSelectionChange(null, newContinent); 
+  };
+
+  const handleCountryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCountry = event.target.value || null;
+    if (selectedContinent) { 
+      onSelectionChange(newCountry, selectedContinent);
+    }
+  };
+
+  // Placeholder text color class
+  const placeholderTextColorClass = "text-gray-400";
 
   return (
-    <div className="w-full text-black border border-gray-200 rounded-lg p-4 mb-2 ">
-      {description}
-      <div className="flex flex-col gap-2 mb-4 w-full ">
-        <div className="mb-3">
-          <select
-            className={`${selectClassName}`}
-            value={selectedContinent ?? ""} // page.tsx から渡される selectedContinent を使用
-            onChange={handleContinentChange}
-          >
-            <option value="">Select Continent</option>
-            {continents.map((continent) => (
-              <option key={continent} value={continent}>
-                {continent}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <select
-            value={selectedCountry ?? ""} // page.tsx から渡される selectedCountry を使用
-            onChange={handleCountryChange}
-            className={`${selectClassName} ${isCountrySelectDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
-            disabled={isCountrySelectDisabled}
-          >
-            {/* 国選択の初期オプション表示ロジック */}
-            {
-              selectedContinent &&
-                selectedContinent !== "" &&
-                selectedContinent !== "Antarctica" && (
-                <option value="">Select Country</option>
-              )
+    <div className={`p-2 rounded-lg bg-white border border-gray-300 ${isSearchUIDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+      <div className="hyphens-auto p-4">
+        Select a continent and country to discover curated art photography
+        monographs and regional works.
+      </div>
+      <div className="p-4">
+        <label htmlFor="continent-select" className="block text-sm font-medium text-gray-700 mb-1">
+          CONTINENT:
+        </label>
+        <select
+          id="continent-select"
+          value={selectedContinent || ""}
+          onChange={handleContinentChange}
+          className={`block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white ${
+            selectedContinent === null ? placeholderTextColorClass : "text-gray-900"
+          }`}
+          disabled={isSearchUIDisabled}
+        >
+          <option value="">Select Continent</option>
+          {Object.keys(continentsFromFile).map((continentName) => (
+            <option key={continentName} value={continentName}>
+              {continentName}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="p-4 mb-3">
+        <label htmlFor="country-select" className="block text-sm font-medium text-gray-700 mb-1">
+          COUNTRY:
+        </label>
+        <select
+          id="country-select"
+          value={currentSelectedCountry || ""}
+          onChange={handleCountryChange}
+          className={`block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white ${
+            (currentSelectedCountry === null || currentSelectedCountry === "") ? placeholderTextColorClass : "text-gray-900"
+          }`}
+          disabled={isSearchUIDisabled || isCountrySelectDisabled}
+        >
+          <option value="">
+            {isCountrySelectDisabled
+              ? (selectedContinent === "Antarctica" ? "-" : "Select Continent First") 
+              : "Select Country"
             }
-            {selectedContinent === "Antarctica" && <option value="">-</option>}
-            {
-              !selectedContinent &&
-              countries.length === 0 && // 大陸未選択時は国リストも空のはず
-                <option value="">Select Continent First</option>
-            }
-            {countries.map((country) => (
-              <option key={country} value={country}>{country}</option>
-            ))}
-          </select>
-        </div>
+          </option>
+          {countries.map((countryName) => (
+            <option key={countryName} value={countryName}>
+              {countryName}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );
 };
-export default SearchUI;
+
+export default React.memo(SearchUI);
