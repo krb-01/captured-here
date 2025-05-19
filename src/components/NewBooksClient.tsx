@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // useEffect, useRef imported
 
 // Bookインターフェース (共通化されている場合はインポート)
 interface Book {
@@ -23,6 +23,7 @@ interface NewBooksClientProps {
 
 const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
   const [showDescriptionIsbn, setShowDescriptionIsbn] = useState<string | null>(null);
+  const activeOverlayRef = useRef<HTMLDivElement>(null); // Ref for the currently active overlay
 
   const handleDescriptionToggle = (isbn: string) => {
     if (showDescriptionIsbn === isbn) {
@@ -31,6 +32,19 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
       setShowDescriptionIsbn(isbn);
     }
   };
+
+  useEffect(() => {
+    if (showDescriptionIsbn && activeOverlayRef.current) {
+      const headerHeight = 80; // Approximate header height in pixels. Adjust as needed.
+      const elementPosition = activeOverlayRef.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, [showDescriptionIsbn]);
 
   return (
     <div className="pb-16">
@@ -48,9 +62,9 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
                   alt={book.title}
                   className="w-full aspect-square object-contain rounded-md"
                 />
-              ) : ( // フォールバック表示 (画像URLがないか、エラーがあった場合)
+              ) : ( 
                 <img
-                  src="/window.svg" // 適切なフォールバック画像パス
+                  src="/window.svg"
                   alt="Fallback image"
                   className="w-full aspect-square object-contain rounded-md"
                 />
@@ -79,6 +93,7 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
             </div>
             {showDescriptionIsbn === book.isbn && (
               <div
+                ref={activeOverlayRef} // Attach ref to the overlay container
                 className="absolute inset-0 bg-[#212121]/[0.8] p-4 flex flex-col rounded-lg z-10"
                 onClick={() => setShowDescriptionIsbn(null)}
               >
@@ -97,7 +112,7 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
                     >
                       CLOSE
                     </button>
-                    <div></div>
+                    <div></div> 
                   </div>
                 </div>
               </div>

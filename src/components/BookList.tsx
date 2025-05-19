@@ -1,6 +1,4 @@
-// import booksData from "@/lib/books.json"; // No longer needed
-// import { getContinentByCountry } from "@/utils/continentCountries"; // No longer needed
-import { useState, useEffect, useMemo } from "react"; // useMemo imported
+import { useState, useEffect, useMemo, useRef } from "react"; // useRef imported
 
 interface BookListProps {
   initialBooks: Book[]; 
@@ -26,6 +24,7 @@ interface Book {
 const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country }) => {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [showDescriptionIsbn, setShowDescriptionIsbn] = useState<string | null>(null);
+  const activeOverlayRef = useRef<HTMLDivElement>(null); // Ref for the currently active overlay
 
   const currentFilteredBooks = useMemo(() => {
     let newFilteredBooks = [...initialBooks]; 
@@ -62,6 +61,19 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
       setShowDescriptionIsbn(isbn);
     }
   };
+
+  useEffect(() => {
+    if (showDescriptionIsbn && activeOverlayRef.current) {
+      const headerHeight = 80; // Approximate header height in pixels. Adjust as needed.
+      const elementPosition = activeOverlayRef.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, [showDescriptionIsbn]);
 
   return (
     <div className="pb-16">
@@ -114,6 +126,7 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
               </div>
               {showDescriptionIsbn === book.isbn && (
                 <div
+                  ref={activeOverlayRef} // Attach ref to the overlay container
                   className="absolute inset-0 bg-[#212121]/[0.8] p-4 flex flex-col rounded-lg z-10"
                   onClick={() => setShowDescriptionIsbn(null)} 
                 >

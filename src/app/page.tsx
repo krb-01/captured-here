@@ -2,54 +2,76 @@ import Layout from "@/components/Layout";
 import NewBooksClient from '@/components/NewBooksClient';
 import InteractiveClientSections from "@/components/InteractiveClientSections";
 import booksDataFromFile from '@/lib/books.json';
-import { getContinentByCountry } from "@/utils/continentCountries"; // Added import
+import { getContinentByCountry } from "@/utils/continentCountries";
 
-// Book interface
 interface Book {
   isbn: string;
   title: string;
   author: string;
   published_on: string;
-  image_url?: string; // image_url is optional
+  image_url?: string;
   region: string;
   country: string;
   description: string;
   created_at: string;
   updated_at: string;
   hasError?: boolean;
-  continent?: string; // Added for BookList
+  continent?: string;
 }
 
-// getProcessedNewBooks - example.com check removed
+// Helper function for image check with caching
+async function checkImage(
+  url: string,
+  cache: Map<string, boolean>, // URL -> hasError status
+  logPrefix: string = ""
+): Promise<boolean> {
+  if (!url) { // Handles undefined, null, or empty string URLs
+    // console.log(`${logPrefix}: No image_url provided.`); // Optional: log if no URL
+    return true; 
+  }
+  if (cache.has(url)) {
+    return cache.get(url)!;
+  }
+
+  let hasError = false;
+  try {
+    const response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(7000) });
+    if (!response.ok) {
+      console.warn(`${logPrefix}: Image HEAD request failed for ${url} with status: ${response.status}`);
+      hasError = true;
+    }
+  } catch (error: any) {
+    if (error.name === 'TimeoutError') {
+      console.warn(`${logPrefix}: Image HEAD request timed out for ${url}`);
+    } else {
+      console.error(`${logPrefix}: Error fetching image HEAD for ${url}:`, error);
+    }
+    hasError = true;
+  }
+  cache.set(url, hasError);
+  return hasError;
+}
+
 async function getProcessedNewBooks(): Promise<Book[]> {
   const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'hasError'>>;
   const sortedNewBooks = [...typedBooksData]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) // Sort by created_at for new books
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 12);
+
+  const imageCheckCache = new Map<string, boolean>(); 
 
   const booksWithImageStatus = await Promise.all(
     sortedNewBooks.map(async (book) => {
-      let hasError = false;
-      if (book.image_url) {
-        try {
-          const response = await fetch(book.image_url, { method: 'HEAD', signal: AbortSignal.timeout(5000) });
-          if (!response.ok) hasError = true;
-        } catch (error) {
-          hasError = true;
-        }
-      } else {
-        hasError = true;
-      }
-      // Explicitly cast to Book to ensure all fields are present or undefined
-      return { ...book, hasError, continent: undefined } as Book; 
+      const hasError = await checkImage(book.image_url || "", imageCheckCache, "NewBooks");
+      return { ...book, hasError, continent: undefined } as Book;
     })
   );
   return booksWithImageStatus;
 }
 
-// getProcessedBookListData - new function for all books for BookList
 async function getProcessedBookListData(): Promise<Book[]> {
   const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'hasError'>>;
+  const imageCheckCache = new Map<string, boolean>();
 
   const booksWithContinent = typedBooksData.map(book => ({
     ...book,
@@ -58,17 +80,7 @@ async function getProcessedBookListData(): Promise<Book[]> {
 
   const booksWithImageStatus = await Promise.all(
     booksWithContinent.map(async (book) => {
-      let hasError = false;
-      if (book.image_url) {
-        try {
-          const response = await fetch(book.image_url, { method: 'HEAD', signal: AbortSignal.timeout(5000) });
-          if (!response.ok) hasError = true;
-        } catch (error) {
-          hasError = true;
-        }
-      } else {
-        hasError = true; 
-      }
+      const hasError = await checkImage(book.image_url || "", imageCheckCache, "BookList");
       return { ...book, hasError };
     })
   );
@@ -77,7 +89,6 @@ async function getProcessedBookListData(): Promise<Book[]> {
     (a, b) => new Date(a.published_on).getTime() - new Date(b.published_on).getTime()
   ) as Book[];
 }
-
 
 export default async function Home() {
     const newBooksData = await getProcessedNewBooks();

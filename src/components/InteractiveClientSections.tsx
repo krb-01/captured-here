@@ -25,10 +25,9 @@ interface InteractiveClientSectionsProps {
   allBooks: Book[];
 }
 
-// It's better to ensure Map component type is correctly inferred or imported for DynamicMap
 const DynamicMap = dynamic(() => import('@/components/Map'), { 
     loading: () => (
-        <div className="w-full flex justify-center items-center h-[600px] bg-gray-200 rounded">
+        <div className="w-full h-full flex justify-center items-center bg-gray-200 rounded">
             <p className="text-gray-500">Loading Map...</p>
         </div>
     ),
@@ -38,7 +37,15 @@ const DynamicMap = dynamic(() => import('@/components/Map'), {
 export default function InteractiveClientSections({ allBooks }: InteractiveClientSectionsProps) { 
     const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
     const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
-    const [isMapInteractive, setIsMapInteractive] = useState(false); // Map readiness state
+    const [isMapInteractive, setIsMapInteractive] = useState(false);
+
+    useEffect(() => {
+      console.log("InteractiveClientSections MOUNTED");
+      return () => {
+        console.log("InteractiveClientSections UNMOUNTED");
+      };
+    }, []);
+
     const handleMapCountryClick = useCallback((country: string | null, continentFromMap: string | null) => {
         if (country && country === "Antarctica") {
             setSelectedCountry("Antarctica");
@@ -67,25 +74,30 @@ export default function InteractiveClientSections({ allBooks }: InteractiveClien
 
     const handleMapReady = useCallback(() => { 
         setIsMapInteractive(true);
+        console.log("Map is ready and interactive!");
     }, []);
+
+    console.log("InteractiveClientSections re-render. Continent:", selectedContinent, "Country:", selectedCountry, "MapInteractive:", isMapInteractive);
 
     return (
         <>
-            <section className="flex gap-4 p-4 items-start bg-white">
-                <div className="w-4/5 mt-4 mb-4">
+            <section className="flex flex-col lg:flex-row gap-4 p-4 items-start bg-white">
+                {/* Map wrapper: default order-2, lg and up order-1 */}
+                <div className="w-full lg:w-4/5 lg:mt-4 lg:mb-4 h-[42vw] lg:h-[32vw] order-2 lg:order-1">
                     <DynamicMap
                         selectedCountry={selectedCountry}
                         selectedContinent={selectedContinent}
                         onCountryClick={handleMapCountryClick}
-                        onMapReady={handleMapReady} // Pass the callback to DynamicMap
+                        onMapReady={handleMapReady}
                     />
                 </div>
-                <div className="w-1/5 mt-4 mb-4">
+                {/* SearchUI wrapper: default order-1, lg and up order-2 */}
+                <div className="w-full lg:w-1/5 lg:mt-4 lg:mb-4 flex flex-col lg:self-stretch order-1 lg:order-2">
                     <SearchUI
                         selectedCountry={selectedCountry}
                         selectedContinent={selectedContinent}
                         onSelectionChange={handleSearchSelection}
-                        isSearchUIDisabled={!isMapInteractive} // Disable SearchUI until map is ready
+                        isSearchUIDisabled={!isMapInteractive}
                     />
                 </div>
             </section>
