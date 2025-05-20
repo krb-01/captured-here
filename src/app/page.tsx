@@ -22,38 +22,58 @@ interface Book {
 // Helper function for image check with caching
 async function checkImage(
   url: string,
-  cache: Map<string, boolean>, // URL -> hasError status
+  cache: Map<string, boolean>,
   logPrefix: string = ""
 ): Promise<boolean> {
-  if (!url) { // Handles undefined, null, or empty string URLs
-    // console.log(`${logPrefix}: No image_url provided.`); // Optional: log if no URL
+  if (!url) {
+    console.warn(`${logPrefix}: No image_url provided or empty.`);
     return true; 
   }
   if (cache.has(url)) {
     return cache.get(url)!;
   }
 
-  let hasError = false;
+  let finalHasError = false;
+  let headFailed = false;
+
   try {
-    const response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(7000) });
+    // console.log(`${logPrefix}: ==> Attempting HEAD for ${url}`);
+    let response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(7000) });
     if (!response.ok) {
-      console.warn(`${logPrefix}: Image HEAD request failed for ${url} with status: ${response.status}`);
-      hasError = true;
+      console.warn(`${logPrefix}: Image HEAD request FAILED for ${url} with status: ${response.status}.`);
+      headFailed = true;
+    } else {
+      // console.log(`${logPrefix}: Image HEAD request SUCCEEDED for ${url}.`);
+      finalHasError = false; 
+    }
+
+    if (headFailed) {
+      // console.log(`${logPrefix}: ==> Attempting GET for ${url} (due to HEAD failure)`);
+      response = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(7000) }); 
+      if (!response.ok) {
+        console.warn(`${logPrefix}: Image GET request FAILED for ${url} with status: ${response.status}`);
+        finalHasError = true;
+      } else {
+        // console.log(`${logPrefix}: Image GET request SUCCEEDED for ${url}.`);
+        finalHasError = false; 
+      }
     }
   } catch (error: any) {
+    const requestType = headFailed ? 'GET' : 'HEAD';
     if (error.name === 'TimeoutError') {
-      console.warn(`${logPrefix}: Image HEAD request timed out for ${url}`);
+      console.warn(`${logPrefix}: Image ${requestType} request timed out for ${url}`);
     } else {
-      console.error(`${logPrefix}: Error fetching image HEAD for ${url}:`, error);
+      console.error(`${logPrefix}: Error during ${requestType} request for ${url}:`, error.message);
     }
-    hasError = true;
+    finalHasError = true;
   }
-  cache.set(url, hasError);
-  return hasError;
+  // console.log(`${logPrefix}: <== Final decision for ${url}. HasError: ${finalHasError}`);
+  cache.set(url, finalHasError);
+  return finalHasError;
 }
 
 async function getProcessedNewBooks(): Promise<Book[]> {
-  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'hasError'>>;
+  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'hasError' | 'image_url'>>;
   const sortedNewBooks = [...typedBooksData]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 12);
@@ -61,31 +81,31 @@ async function getProcessedNewBooks(): Promise<Book[]> {
   const imageCheckCache = new Map<string, boolean>(); 
 
   const booksWithImageStatus = await Promise.all(
-    sortedNewBooks.map(async (book) => {
-      const hasError = await checkImage(book.image_url || "", imageCheckCache, "NewBooks");
-      return { ...book, hasError, continent: undefined } as Book;
+    sortedNewBooks.map(async (bookInput) => {
+      const imageUrl = bookInput.isbn ? `https://images-na.ssl-images-amazon.com/images/P/${bookInput.isbn}.09_THUMBZZZ.jpg` : "";
+      // console.log(`NewBooks: Attempting new imageUrl: ${imageUrl} (ISBN: ${bookInput.isbn})`);
+      const hasError = await checkImage(imageUrl, imageCheckCache, "NewBooks");
+      return { ...bookInput, image_url: imageUrl, hasError, continent: undefined } as Book;
     })
   );
   return booksWithImageStatus;
 }
 
 async function getProcessedBookListData(): Promise<Book[]> {
-  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'hasError'>>;
+  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'hasError' | 'image_url'>>;
   const imageCheckCache = new Map<string, boolean>();
 
-  const booksWithContinent = typedBooksData.map(book => ({
-    ...book,
-    continent: getContinentByCountry(book.country) || undefined,
-  }));
-
-  const booksWithImageStatus = await Promise.all(
-    booksWithContinent.map(async (book) => {
-      const hasError = await checkImage(book.image_url || "", imageCheckCache, "BookList");
-      return { ...book, hasError };
+  const booksWithDetails = await Promise.all(
+    typedBooksData.map(async (bookInput) => {
+      const imageUrl = bookInput.isbn ? `https://images-na.ssl-images-amazon.com/images/P/${bookInput.isbn}.09_THUMBZZZ.jpg` : "";
+      // console.log(`BookList: Attempting new imageUrl: ${imageUrl} (ISBN: ${bookInput.isbn})`);
+      const hasError = await checkImage(imageUrl, imageCheckCache, "BookList");
+      const continent = getContinentByCountry(bookInput.country) || undefined;
+      return { ...bookInput, image_url: imageUrl, hasError, continent } as Book;
     })
   );
 
-  return booksWithImageStatus.sort(
+  return booksWithDetails.sort(
     (a, b) => new Date(a.published_on).getTime() - new Date(b.published_on).getTime()
   ) as Book[];
 }

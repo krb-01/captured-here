@@ -82,8 +82,8 @@ export default function InteractiveClientSections({ allBooks }: InteractiveClien
     return (
         <>
             <section className="flex flex-col lg:flex-row gap-4 p-4 items-start bg-white">
-                {/* Map wrapper: default order-2, lg and up order-1 */}
-                <div className="w-full lg:w-4/5 lg:mt-4 lg:mb-4 h-[42vw] lg:h-[32vw] order-2 lg:order-1">
+                {/* Map wrapper: default order-2 (bottom in <md), md:order-1 (top in md-lg, left in lg+) */}
+                <div className="w-full lg:w-4/5 lg:mt-4 lg:mb-4 h-[42vw] lg:h-[32vw] order-2 md:order-1">
                     <DynamicMap
                         selectedCountry={selectedCountry}
                         selectedContinent={selectedContinent}
@@ -91,8 +91,8 @@ export default function InteractiveClientSections({ allBooks }: InteractiveClien
                         onMapReady={handleMapReady}
                     />
                 </div>
-                {/* SearchUI wrapper: default order-1, lg and up order-2 */}
-                <div className="w-full lg:w-1/5 lg:mt-4 lg:mb-4 flex flex-col lg:self-stretch order-1 lg:order-2">
+                {/* SearchUI wrapper: default order-1 (top in <md), md:order-2 (bottom in md-lg, right in lg+) */}
+                <div className="w-full lg:w-1/5 lg:mt-4 lg:mb-4 flex flex-col lg:self-stretch order-1 md:order-2">
                     <SearchUI
                         selectedCountry={selectedCountry}
                         selectedContinent={selectedContinent}

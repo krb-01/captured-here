@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react"; // useRef imported
+import { useState, useEffect, useMemo, useRef } from "react";
 
 interface BookListProps {
   initialBooks: Book[]; 
@@ -24,11 +24,10 @@ interface Book {
 const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country }) => {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [showDescriptionIsbn, setShowDescriptionIsbn] = useState<string | null>(null);
-  const activeOverlayRef = useRef<HTMLDivElement>(null); // Ref for the currently active overlay
+  const activeOverlayRef = useRef<HTMLDivElement>(null);
 
   const currentFilteredBooks = useMemo(() => {
     let newFilteredBooks = [...initialBooks]; 
-
     if (continent) {
       newFilteredBooks = newFilteredBooks.filter(
         (book) => book.continent === continent
@@ -63,8 +62,10 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
   };
 
   useEffect(() => {
-    if (showDescriptionIsbn && activeOverlayRef.current) {
-      const headerHeight = 80; // Approximate header height in pixels. Adjust as needed.
+    const mobileBreakpoint = 768; // Corresponds to Tailwind's lg breakpoint
+
+    if (showDescriptionIsbn && activeOverlayRef.current && window.innerWidth < mobileBreakpoint) {
+      const headerHeight = 80;
       const elementPosition = activeOverlayRef.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
 
@@ -115,18 +116,19 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
               </div>
               <div className="grid grid-cols-2 gap-2 mt-4 ">
                 <button 
-                  className="bg-[#212121] text-white text-xs py-2 px-4 rounded-md hover:scale-105 transition-transform"
+                  className="bg-[#212121] text-white text-xs px-1 py-2 rounded-md hover:scale-105 transition-transform"
                   onClick={() => handleDescriptionToggle(book.isbn)}
-                >
-                  DESCRIPTION
-                </button>
-                <button className="bg-amber-500 text-white text-xs py-2 px-4 rounded-md hover:scale-105 transition-transform">
-                  AVAILABLE ON AMAZON
-                </button>
+                >DESCRIPTION</button>
+                <a
+                  href={`https://www.amazon.co.jp/dp/${book.isbn}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-amber-500 text-white text-xs px-1 py-2 rounded-md hover:scale-105 transition-transform text-center block"
+                >AVAILABLE ON AMAZON</a>
               </div>
               {showDescriptionIsbn === book.isbn && (
                 <div
-                  ref={activeOverlayRef} // Attach ref to the overlay container
+                  ref={activeOverlayRef}
                   className="absolute inset-0 bg-[#212121]/[0.8] p-4 flex flex-col rounded-lg z-10"
                   onClick={() => setShowDescriptionIsbn(null)} 
                 >

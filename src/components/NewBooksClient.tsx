@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react'; // useEffect, useRef imported
+import React, { useState, useEffect, useRef } from 'react';
 
-// Bookインターフェース (共通化されている場合はインポート)
 interface Book {
   isbn: string;
   title: string;
   author: string;
   published_on: string;
   image_url?: string;
-  region: string; // NewBooksでは直接使われていないが、元々の型定義にはあった
+  region: string;
   country: string;
   description: string;
-  created_at: string; // NewBooksでは直接使われていない
-  updated_at: string; // NewBooksでは直接使われていない
-  hasError?: boolean; // サーバーで判定済み
+  created_at: string;
+  updated_at: string;
+  hasError?: boolean;
 }
 
 interface NewBooksClientProps {
@@ -23,7 +22,7 @@ interface NewBooksClientProps {
 
 const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
   const [showDescriptionIsbn, setShowDescriptionIsbn] = useState<string | null>(null);
-  const activeOverlayRef = useRef<HTMLDivElement>(null); // Ref for the currently active overlay
+  const activeOverlayRef = useRef<HTMLDivElement>(null);
 
   const handleDescriptionToggle = (isbn: string) => {
     if (showDescriptionIsbn === isbn) {
@@ -34,8 +33,10 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
   };
 
   useEffect(() => {
-    if (showDescriptionIsbn && activeOverlayRef.current) {
-      const headerHeight = 80; // Approximate header height in pixels. Adjust as needed.
+    const mobileBreakpoint = 768; // Corresponds to Tailwind's lg breakpoint
+
+    if (showDescriptionIsbn && activeOverlayRef.current && window.innerWidth < mobileBreakpoint) {
+      const headerHeight = 80; 
       const elementPosition = activeOverlayRef.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
 
@@ -80,20 +81,19 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
               <button
-                className="bg-black text-white px-4 py-2 rounded text-xs hover:scale-105 transition-all duration-200"
+                className="bg-black text-white px-1 py-2 rounded text-xs hover:scale-105 transition-all duration-200"
                 onClick={() => handleDescriptionToggle(book.isbn)}
-              >
-                DESCRIPTION
-              </button>
-              <button
-                className="bg-[#FF9900] text-white px-4 py-2 rounded text-xs hover:scale-105 transition-all duration-200"
-              >
-                AVAILABLE ON AMAZON
-              </button>
+              >DESCRIPTION</button>
+              <a
+                href={`https://www.amazon.co.jp/dp/${book.isbn}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#FF9900] text-white px-1 py-2 rounded text-xs hover:scale-105 transition-all duration-200 text-center block"
+              >AVAILABLE ON AMAZON</a>
             </div>
             {showDescriptionIsbn === book.isbn && (
               <div
-                ref={activeOverlayRef} // Attach ref to the overlay container
+                ref={activeOverlayRef}
                 className="absolute inset-0 bg-[#212121]/[0.8] p-4 flex flex-col rounded-lg z-10"
                 onClick={() => setShowDescriptionIsbn(null)}
               >
