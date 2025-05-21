@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CAPTURED HERE - Explore the World Through Photography Art Books
 
-## Getting Started
+Welcome to **CAPTURED HERE**! This web application is a platform to discover and explore stunning photography art books from around the world, based on the locations where their images were captured. Find new perspectives and inspiration through beautiful art photography.
 
-First, run the development server:
+## Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+CAPTURED HERE allows you to easily find photography books shot in, or themed around, specific continents and countries using an interactive world map. It's designed for photography enthusiasts, travel lovers, and anyone who appreciates beautiful books.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+*   **Interactive Map Search**: Select regions of interest on a clickable world map to explore related photography books.
+*   **Filter by Continent/Country**: Easily find books from specific regions by selecting continents and countries from dropdown menus.
+*   **New Arrivals**: Check out recently added photography books.
+*   **Book Details**: View cover images, titles, authors, publication years, and detailed descriptions for each book in an overlay.
+*   **Available on Amazon**: Links directly to Amazon.co.jp product pages for books you're interested in, making it easy to consider a purchase (our site participates in the Amazon Associates Program).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How to Use
 
-## Learn More
+1.  **Explore the Map**: Click directly on the interactive map on the homepage or select a continent from the dropdown menu on the right.
+2.  **Select a Country**: Once a continent is selected, the list of countries within that continent will become active. Selecting a country will zoom the map to that country (or move to the center of the continent) and display related books below.
+3.  **Browse the Book List**: A list of photography books related to the selected region will be displayed.
+4.  **View Details**: Click the "DESCRIPTION" button for any book to view its detailed information in an overlay.
+5.  **Find on Amazon**: Click the "AVAILABLE ON AMAZON" button to open the book's product page on Amazon.co.jp in a new tab.
+6.  **Check New Arrivals**: Discover newly added photography books anytime in the "New Arrivals" section.
 
-To learn more about Next.js, take a look at the following resources:
+## Technology Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This application is built using the following modern web technologies:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+*   **Frontend**: Next.js (React Framework), TypeScript, Tailwind CSS
+*   **Map Visualization**: D3.js, TopoJSON
+*   **Backend & Database**: Firebase (Firestore, Firebase Hosting/Functions)
+*   **Deployment**: Firebase Hosting
 
-## Deploy on Vercel
+## Future Plans
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+*   Expansion and addition of more photography book data.
+*   Implementation of user reviews and a favorites feature.
+*   Enhanced search functionality (e.g., keyword search).
+*   Multilingual support.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contact / Feedback
+
+We welcome your opinions, impressions, notifications of errors in information, and any other inquiries regarding this site. Please feel free to contact us at the email address below.
+
+Email: `support-team@kairiku-books.com`
+
+## License
+
+Currently, no specific open-source license is set. Unauthorized reproduction of content is prohibited.
+
+---
+
+This README aims to convey the appeal of CAPTURED HERE.
