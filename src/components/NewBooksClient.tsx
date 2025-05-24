@@ -33,13 +33,11 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
   };
 
   useEffect(() => {
-    const mobileBreakpoint = 768; // Corresponds to Tailwind's lg breakpoint
-
+    const mobileBreakpoint = 1024;
     if (showDescriptionIsbn && activeOverlayRef.current && window.innerWidth < mobileBreakpoint) {
       const headerHeight = 80; 
       const elementPosition = activeOverlayRef.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
-
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth'
@@ -60,13 +58,13 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
               {book.image_url && !book.hasError ? (
                 <img
                   src={book.image_url}
-                  alt={book.title}
+                  alt={`Cover of ${book.title} by ${book.author}`}
                   className="w-full aspect-square object-contain rounded-md"
                 />
               ) : ( 
                 <img
                   src="/window.svg"
-                  alt="Fallback image"
+                  alt="Book cover placeholder" // Alt text for fallback image
                   className="w-full aspect-square object-contain rounded-md"
                 />
               )}
@@ -81,15 +79,19 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
               <button
-                className="bg-black text-white px-1 py-2 rounded text-xs hover:scale-105 transition-all duration-200"
+                className="bg-black text-white px-4 py-2 rounded text-xs hover:scale-105 transition-all duration-200"
                 onClick={() => handleDescriptionToggle(book.isbn)}
-              >DESCRIPTION</button>
+              >
+                DESCRIPTION
+              </button>
               <a
                 href={`https://www.amazon.co.jp/dp/${book.isbn}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#FF9900] text-white px-1 py-2 rounded text-xs hover:scale-105 transition-all duration-200 text-center block"
-              >AVAILABLE ON AMAZON</a>
+                className="bg-[#FF9900] text-white px-4 py-2 rounded text-xs hover:scale-105 transition-all duration-200 text-center block"
+              >
+                AVAILABLE ON AMAZON
+              </a>
             </div>
             {showDescriptionIsbn === book.isbn && (
               <div

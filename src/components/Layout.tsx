@@ -24,6 +24,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <footer className="w-full text-white text-sm p-4 bg-[#212121]">
         <div className="flex flex-col items-center">
           <div className="flex gap-4 mb-2">
+            <Link className="hover:underline" href="/">Home</Link>
             <Link className="hover:underline" href="/privacy-policy">Privacy Policy</Link>
             <Link className="hover:underline" href="/terms-of-service">Terms of Service</Link>
           </div>

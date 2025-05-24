@@ -62,13 +62,11 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
   };
 
   useEffect(() => {
-    const mobileBreakpoint = 768; // Corresponds to Tailwind's lg breakpoint
-
+    const mobileBreakpoint = 1024;
     if (showDescriptionIsbn && activeOverlayRef.current && window.innerWidth < mobileBreakpoint) {
       const headerHeight = 80;
       const elementPosition = activeOverlayRef.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
-
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth'
@@ -93,14 +91,14 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
                   {book.image_url && !book.hasError ? (
                     <img
                       src={book.image_url}
-                      alt={book.title}
+                      alt={`Cover of ${book.title} by ${book.author}`}
                       className="w-full aspect-square object-contain rounded-md"
                     />
                   ) : (
                     <div className="w-full aspect-square object-contain rounded-md">
                       <img
                         src="/file.svg" 
-                        alt="fallback"
+                        alt="Book cover placeholder" // Alt text for fallback image
                         className="w-full h-full object-contain"
                       />
                     </div>
@@ -116,15 +114,19 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
               </div>
               <div className="grid grid-cols-2 gap-2 mt-4 ">
                 <button 
-                  className="bg-[#212121] text-white text-xs px-1 py-2 rounded-md hover:scale-105 transition-transform"
+                  className="bg-[#212121] text-white text-xs py-2 px-4 rounded-md hover:scale-105 transition-transform"
                   onClick={() => handleDescriptionToggle(book.isbn)}
-                >DESCRIPTION</button>
+                >
+                  DESCRIPTION
+                </button>
                 <a
                   href={`https://www.amazon.co.jp/dp/${book.isbn}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-amber-500 text-white text-xs px-1 py-2 rounded-md hover:scale-105 transition-transform text-center block"
-                >AVAILABLE ON AMAZON</a>
+                  className="bg-amber-500 text-white text-xs py-2 px-4 rounded-md hover:scale-105 transition-transform text-center block"
+                >
+                  AVAILABLE ON AMAZON
+                </a>
               </div>
               {showDescriptionIsbn === book.isbn && (
                 <div

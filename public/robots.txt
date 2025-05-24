@@ -1,0 +1,7 @@
+# robots.txt for CAPTURED HERE
+
+User-agent: *
+Allow: /
+Disallow:
+
+Sitemap: https://captured-here.net/sitemap.xml
