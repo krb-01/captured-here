@@ -21,7 +21,6 @@ const CookieBanner: React.FC = () => {
       if (!gaInitialized) {
         initializeGA().then(analyticsInstance => {
           if (analyticsInstance) {
-            console.log('Google Analytics initialized based on prior consent.');
             setGaInitialized(true);
           }
         });
@@ -38,7 +37,6 @@ const CookieBanner: React.FC = () => {
     if (!gaInitialized) {
       initializeGA().then(analyticsInstance => {
         if (analyticsInstance) {
-          console.log('Google Analytics initialized on accept.');
           setGaInitialized(true);
         }
       });

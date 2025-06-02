@@ -10,14 +10,12 @@ interface Book {
   isbn: string;
   title: string;
   author: string;
-  published_on: string;
   image_url?: string;
   region: string;
   country: string;
   description: string;
   created_at: string;
   updated_at: string;
-  hasError?: boolean;
   continent?: string;
 }
 
@@ -77,7 +75,8 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
   return (
     <div className="pb-16">
       <h2 className="text-2xl font-bold text-white pt-8 mb-8">{title}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+      {/* Updated grid column classes */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
         {filteredBooks.length === 0 ? (
           <p className="text-white">No items found</p>
         ) : (
@@ -88,7 +87,7 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
             >
               <div className="h-full flex-1 bg-white">
                 <div className="mb-4">
-                  {book.image_url && !book.hasError ? (
+                  {book.image_url ? (
                     <img
                       src={book.image_url}
                       alt={`Cover of ${book.title} by ${book.author}`}
@@ -98,7 +97,7 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
                     <div className="w-full aspect-square object-contain rounded-md">
                       <img
                         src="/file.svg" 
-                        alt="Book cover placeholder" // Alt text for fallback image
+                        alt="Book cover placeholder"
                         className="w-full h-full object-contain"
                       />
                     </div>
@@ -107,9 +106,6 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
                 <div className="mb-2">
                   <p className="font-bold text-black">{book.title}</p>
                   <p className="text-sm text-black">by {book.author}</p>
-                  <p className="text-xs text-black mt-1">
-                    Published: {new Date(book.published_on).getFullYear()}
-                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 mt-4 ">

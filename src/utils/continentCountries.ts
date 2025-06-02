@@ -6,7 +6,7 @@ export const continentCountries = {
         'Guinea', 'Liberia', 'Central African Rep.', 'Sudan', 'Djibouti',
         'Eritrea', 'Côte d\'Ivoire', 'Mali', 'Senegal', 'Nigeria', 'Benin',
         'Angola', 'Botswana', 'Zimbabwe', 'Chad', 'Algeria', 'Mozambique',
-        'eSwatini', 'Burundi', 'Rwanda', 'Uganda', 'Lesotho', 'Cameroon',
+        'Eswatini', 'Burundi', 'Rwanda', 'Uganda', 'Lesotho', 'Cameroon',
         'Gabon', 'Niger', 'Burkina Faso', 'Togo', 'Ghana', 'Guinea-Bissau',
         'Egypt', 'Mauritania', 'Eq. Guinea', 'Gambia', 'Bir Tawil',
         'Madagascar', 'Comoros', 'São Tomé and Principe', 'Cabo Verde'

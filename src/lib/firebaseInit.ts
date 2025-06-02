@@ -62,6 +62,5 @@ export function updateAnalyticsConsent(consent: 'accepted' | 'rejected') {
       'ad_storage': consent === 'accepted' ? 'granted' : 'denied'
     };
     setConsent(consentSettings);
-    console.log("Analytics consent updated:", consentSettings);
   }
 }

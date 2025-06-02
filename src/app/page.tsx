@@ -1,4 +1,4 @@
-// import Layout from "@/components/Layout"; // Layout import removed
+// import Layout from "@/components/Layout"; // Already removed
 import NewBooksClient from '@/components/NewBooksClient';
 import InteractiveClientSections from "@/components/InteractiveClientSections";
 import booksDataFromFile from '@/lib/books.json';
@@ -8,99 +8,66 @@ interface Book {
   isbn: string;
   title: string;
   author: string;
-  published_on: string;
   image_url?: string;
   region: string;
   country: string;
   description: string;
   created_at: string;
   updated_at: string;
-  hasError?: boolean;
   continent?: string;
+  // published_on and hasError are fully removed from this type if not in books.json
 }
 
-async function checkImage(
-  url: string,
-  cache: Map<string, boolean>,
-  logPrefix: string = ""
-): Promise<boolean> {
-  if (!url) {
-    console.warn(`${logPrefix}: No image_url provided or empty.`);
-    return true; 
-  }
-  if (cache.has(url)) {
-    return cache.get(url)!;
-  }
-  let finalHasError = false;
-  let headFailed = false;
-  try {
-    let response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(7000) });
-    if (!response.ok) {
-      console.warn(`${logPrefix}: Image HEAD request FAILED for ${url} with status: ${response.status}.`);
-      headFailed = true;
-    } else {
-      finalHasError = false; 
-    }
-    if (headFailed) {
-      response = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(7000) }); 
-      if (!response.ok) {
-        console.warn(`${logPrefix}: Image GET request FAILED for ${url} with status: ${response.status}`);
-        finalHasError = true;
-      } else {
-        finalHasError = false; 
-      }
-    }
-  } catch (error: any) {
-    const requestType = headFailed ? 'GET' : 'HEAD';
-    if (error.name === 'TimeoutError') {
-      console.warn(`${logPrefix}: Image ${requestType} request timed out for ${url}`);
-    } else {
-      console.error(`${logPrefix}: Error during ${requestType} request for ${url}:`, error.message);
-    }
-    finalHasError = true;
-  }
-  cache.set(url, finalHasError);
-  return finalHasError;
-}
+// checkImage helper function is now completely removed
 
 async function getProcessedNewBooks(): Promise<Book[]> {
-  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'hasError' | 'image_url'>>;
+  // Assuming booksDataFromFile items match Omit<Book, 'continent' | 'image_url'>
+  // If books.json items might have extra fields like published_on or hasError not in the final Book type,
+  // they need to be destructured/omitted carefully.
+  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'image_url'> >;
   const sortedNewBooks = [...typedBooksData]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 12);
-  const imageCheckCache = new Map<string, boolean>(); 
-  const booksWithImageStatus = await Promise.all(
-    sortedNewBooks.map(async (bookInput) => {
-      const imageUrl = bookInput.isbn ? `https://images-na.ssl-images-amazon.com/images/P/${bookInput.isbn}.09_THUMBZZZ.jpg` : "";
-      const hasError = await checkImage(imageUrl, imageCheckCache, "NewBooks");
-      return { ...bookInput, image_url: imageUrl, hasError, continent: undefined } as Book;
-    })
-  );
-  return booksWithImageStatus;
+
+  // .map is now synchronous as checkImage is removed
+  const booksWithDetails = sortedNewBooks.map((bookInput) => {
+    const imageUrl = bookInput.isbn ? `https://images-na.ssl-images-amazon.com/images/P/${bookInput.isbn}.09_THUMBZZZ.jpg` : "";
+    // Ensure that the spread bookInput does not accidentally carry over fields not in the target Book type.
+    // If bookInput has fields like published_on or hasError, they should be explicitly handled or omitted.
+    const { region, country, description, created_at, updated_at, isbn, title, author } = bookInput as any;
+    return { 
+        isbn, title, author, region, country, description, created_at, updated_at, // Fields from bookInput that are in Book type
+        image_url: imageUrl, 
+        continent: undefined 
+    } as Book;
+  });
+  return booksWithDetails; 
 }
 
 async function getProcessedBookListData(): Promise<Book[]> {
-  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'hasError' | 'image_url'>>;
-  const imageCheckCache = new Map<string, boolean>();
-  const booksWithDetails = await Promise.all(
-    typedBooksData.map(async (bookInput) => {
-      const imageUrl = bookInput.isbn ? `https://images-na.ssl-images-amazon.com/images/P/${bookInput.isbn}.09_THUMBZZZ.jpg` : "";
-      const hasError = await checkImage(imageUrl, imageCheckCache, "BookList");
-      const continent = getContinentByCountry(bookInput.country) || undefined;
-      return { ...bookInput, image_url: imageUrl, hasError, continent } as Book;
-    })
-  );
-  return booksWithDetails.sort(
-    (a, b) => new Date(a.published_on).getTime() - new Date(b.published_on).getTime()
-  ) as Book[];
+  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'image_url'> >;
+
+  // .map is now synchronous
+  const booksWithDetails = typedBooksData.map((bookInput) => {
+    const imageUrl = bookInput.isbn ? `https://images-na.ssl-images-amazon.com/images/P/${bookInput.isbn}.09_THUMBZZZ.jpg` : "";
+    const continent = getContinentByCountry(bookInput.country) || undefined;
+    const { region, country, description, created_at, updated_at, isbn, title, author } = bookInput as any;
+    return { 
+        isbn, title, author, region, country, description, created_at, updated_at, // Fields from bookInput
+        image_url: imageUrl, 
+        continent 
+    } as Book;
+  });
+  // Sorting by published_on was already removed
+  return booksWithDetails; 
 }
 
 export default async function Home() {
-    const newBooksData = await getProcessedNewBooks();
+    // These functions are still async because they might perform other async operations in the future (e.g., DB access)
+    const newBooksData = await getProcessedNewBooks(); 
     const bookListData = await getProcessedBookListData();
 
     return (
-      // Layout wrapper removed, using React Fragment
       <>
         <InteractiveClientSections key="interactive-sections-main" allBooks={bookListData} />
         <section className="w-full bg-gray-100">
