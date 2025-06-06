@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - main # 'main' ブランチへのプッシュ時に実行 (または 'master' など)
-  # pull_request: # プルリクエスト時にもビルドテストを実行したい場合 (任意)
-  #   branches:
-  //         - main
+  # pull_request セクションを削除
 
 jobs:
   build_and_deploy:
