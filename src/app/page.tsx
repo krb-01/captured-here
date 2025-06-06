@@ -1,69 +1,100 @@
 // import Layout from "@/components/Layout"; // Already removed
 import NewBooksClient from '@/components/NewBooksClient';
 import InteractiveClientSections from "@/components/InteractiveClientSections";
-import booksDataFromFile from '@/lib/books.json';
-import { getContinentByCountry } from "@/utils/continentCountries";
+// import booksDataFromFile from '@/lib/books.json'; // No longer using local JSON
+import { fetchAllBooksFromFirestore } from '@/lib/firebaseAdmin';
+import { getContinentByCountry, continentCountries } from "@/utils/continentCountries"; // continentCountriesもインポート
 
+// Updated Book interface
 interface Book {
-  isbn: string;
+  id?: string; 
+  // isbn?: string; // Removed
   title: string;
   author: string;
   image_url?: string;
-  region: string;
-  country: string;
+  region: string; // Comma-separated string from Firestore
+  country: string; // Comma-separated string from Firestore
   description: string;
-  created_at: string;
-  updated_at: string;
-  continent?: string;
-  // published_on and hasError are fully removed from this type if not in books.json
+  created_at: string; 
+  updated_at: string; 
+  continent?: string[]; // Array of continent names
+  amazon_url?: string; 
 }
 
-// checkImage helper function is now completely removed
+// Interface for data structure from Firestore
+interface FirestoreBookData {
+  id?: string;
+  author: string;
+  country: string; 
+  created_at: any; 
+  description: string;
+  image_url?: string; 
+  region: string; 
+  title: string;
+  updated_at: any; 
+  url: string; // Amazon URL
+  // isbn is not expected from Firestore directly
+}
+
+// Helper to process a single book from Firestore data to Book type
+function processFirestoreBook(bookInput: FirestoreBookData): Book {
+  const imageUrl = bookInput.image_url || ""; // Use Firestore's image_url directly
+  
+  const countries = bookInput.country ? bookInput.country.split(',').map(c => c.trim()) : [];
+  const uniqueContinents = new Set<string>();
+  if (countries.length > 0) {
+    countries.forEach(singleCountry => {
+      const continentForCountry = getContinentByCountry(singleCountry);
+      if (continentForCountry && continentForCountry !== "Unknown") { // Assuming "Unknown" is not a valid continent to add
+        uniqueContinents.add(continentForCountry);
+      }
+    });
+  }
+  const continentsArray = uniqueContinents.size > 0 ? Array.from(uniqueContinents) : undefined;
+
+  const createdAtString = bookInput.created_at?.toDate ? bookInput.created_at.toDate().toISOString() : new Date(bookInput.created_at).toISOString();
+  const updatedAtString = bookInput.updated_at?.toDate ? bookInput.updated_at.toDate().toISOString() : new Date(bookInput.updated_at).toISOString();
+
+  return {
+    id: bookInput.id,
+    title: bookInput.title,
+    author: bookInput.author,
+    image_url: imageUrl,
+    region: bookInput.region, // Keep as comma-separated string
+    country: bookInput.country, // Keep as comma-separated string
+    description: bookInput.description,
+    created_at: createdAtString,
+    updated_at: updatedAtString,
+    continent: continentsArray,
+    amazon_url: bookInput.url,
+  } as Book;
+}
 
 async function getProcessedNewBooks(): Promise<Book[]> {
-  // Assuming booksDataFromFile items match Omit<Book, 'continent' | 'image_url'>
-  // If books.json items might have extra fields like published_on or hasError not in the final Book type,
-  // they need to be destructured/omitted carefully.
-  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'image_url'> >;
+  const allBooksFromFirestore = await fetchAllBooksFromFirestore();
+  const typedBooksData = allBooksFromFirestore as FirestoreBookData[];
+
   const sortedNewBooks = [...typedBooksData]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort((a, b) => {
+        const dateA = a.created_at?.toDate ? a.created_at.toDate() : new Date(a.created_at);
+        const dateB = b.created_at?.toDate ? b.created_at.toDate() : new Date(b.created_at);
+        return dateB.getTime() - dateA.getTime();
+    })
     .slice(0, 12);
 
-  // .map is now synchronous as checkImage is removed
-  const booksWithDetails = sortedNewBooks.map((bookInput) => {
-    const imageUrl = bookInput.isbn ? `https://images-na.ssl-images-amazon.com/images/P/${bookInput.isbn}.09_THUMBZZZ.jpg` : "";
-    // Ensure that the spread bookInput does not accidentally carry over fields not in the target Book type.
-    // If bookInput has fields like published_on or hasError, they should be explicitly handled or omitted.
-    const { region, country, description, created_at, updated_at, isbn, title, author } = bookInput as any;
-    return { 
-        isbn, title, author, region, country, description, created_at, updated_at, // Fields from bookInput that are in Book type
-        image_url: imageUrl, 
-        continent: undefined 
-    } as Book;
-  });
-  return booksWithDetails; 
+  const booksWithDetails = sortedNewBooks.map(processFirestoreBook);
+  return booksWithDetails;
 }
 
 async function getProcessedBookListData(): Promise<Book[]> {
-  const typedBooksData = booksDataFromFile as Array<Omit<Book, 'continent' | 'image_url'> >;
+  const allBooksFromFirestore = await fetchAllBooksFromFirestore();
+  const typedBooksData = allBooksFromFirestore as FirestoreBookData[];
 
-  // .map is now synchronous
-  const booksWithDetails = typedBooksData.map((bookInput) => {
-    const imageUrl = bookInput.isbn ? `https://images-na.ssl-images-amazon.com/images/P/${bookInput.isbn}.09_THUMBZZZ.jpg` : "";
-    const continent = getContinentByCountry(bookInput.country) || undefined;
-    const { region, country, description, created_at, updated_at, isbn, title, author } = bookInput as any;
-    return { 
-        isbn, title, author, region, country, description, created_at, updated_at, // Fields from bookInput
-        image_url: imageUrl, 
-        continent 
-    } as Book;
-  });
-  // Sorting by published_on was already removed
-  return booksWithDetails; 
+  const booksWithDetails = typedBooksData.map(processFirestoreBook);
+  return booksWithDetails;
 }
 
 export default async function Home() {
-    // These functions are still async because they might perform other async operations in the future (e.g., DB access)
     const newBooksData = await getProcessedNewBooks(); 
     const bookListData = await getProcessedBookListData();
 

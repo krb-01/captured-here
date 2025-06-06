@@ -6,17 +6,20 @@ import SearchUI from "@/components/SearchUI";
 import { getContinentByCountry } from '@/utils/continentCountries';
 import dynamic from 'next/dynamic';
 
+// Updated Book interface to match page.tsx
 interface Book {
-  isbn: string;
+  id?: string; 
+  // isbn?: string; // Removed
   title: string;
   author: string;
   image_url?: string;
-  region: string;
-  country: string;
+  region: string; 
+  country: string; 
   description: string;
-  created_at: string;
-  updated_at: string;
-  continent?: string;
+  created_at: string; 
+  updated_at: string; 
+  continent?: string[]; // Array of continent names
+  amazon_url?: string; 
 }
 
 interface InteractiveClientSectionsProps {
@@ -37,12 +40,21 @@ export default function InteractiveClientSections({ allBooks }: InteractiveClien
     const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
     const [isMapInteractive, setIsMapInteractive] = useState(false);
 
+    useEffect(() => {
+      // console.log("InteractiveClientSections MOUNTED"); // Debug log removed
+      return () => {
+        // console.log("InteractiveClientSections UNMOUNTED"); // Debug log removed
+      };
+    }, []);
+
     const handleMapCountryClick = useCallback((country: string | null, continentFromMap: string | null) => {
         if (country && country === "Antarctica") {
             setSelectedCountry("Antarctica");
             setSelectedContinent("Antarctica");
         } else if (country && country !== "Unknown") {
-            const newContinent = getContinentByCountry(country);
+            // Assuming getContinentByCountry can still be used if needed for map interaction, 
+            // but primary continent data comes from allBooks.
+            const newContinent = getContinentByCountry(country); // This might need re-evaluation based on how continents are handled
             setSelectedCountry(country);
             setSelectedContinent(newContinent);
         } else {
@@ -56,8 +68,11 @@ export default function InteractiveClientSections({ allBooks }: InteractiveClien
             setSelectedContinent("Antarctica");
         } else if (country && country !== "Unknown") {
             setSelectedCountry(country);
-            setSelectedContinent(getContinentByCountry(country));
-        } else {
+            // When a country is selected in SearchUI, we might need to find its primary continent
+            // or adjust how selectedContinent is set if a country can belong to multiple.
+            // For now, keep using getContinentByCountry for the selected continent display if SearchUI drives it.
+            setSelectedContinent(getContinentByCountry(country)); 
+        } else { // Only continent is selected, or both are cleared
             setSelectedCountry(null);
             setSelectedContinent(continent);
         }
@@ -65,26 +80,26 @@ export default function InteractiveClientSections({ allBooks }: InteractiveClien
 
     const handleMapReady = useCallback(() => { 
         setIsMapInteractive(true);
+        // console.log("Map is ready and interactive!"); // Debug log removed
     }, []);
+
+    // console.log("InteractiveClientSections re-render. Continent:", selectedContinent, "Country:", selectedCountry, "MapInteractive:", isMapInteractive); // Debug log removed
 
     return (
         <>
-            {/* Section changes to flex-row at lg (1024px) breakpoint */}
             <section className="flex flex-col lg:flex-row gap-4 p-4 items-start bg-white">
-                {/* Map wrapper: order changes at md, other layout changes at lg */}
                 <div className="w-full lg:w-4/5 lg:mt-4 lg:mb-4 h-[42vw] lg:h-[32vw] order-2 md:order-1">
                     <DynamicMap
                         selectedCountry={selectedCountry}
-                        selectedContinent={selectedContinent}
+                        selectedContinent={selectedContinent} // This selectedContinent is a single string
                         onCountryClick={handleMapCountryClick}
                         onMapReady={handleMapReady}
                     />
                 </div>
-                {/* SearchUI wrapper: order changes at md, other layout changes at lg */}
                 <div className="w-full lg:w-1/5 lg:mt-4 lg:mb-4 flex flex-col lg:self-stretch order-1 md:order-2">
                     <SearchUI
                         selectedCountry={selectedCountry}
-                        selectedContinent={selectedContinent}
+                        selectedContinent={selectedContinent} // This selectedContinent is a single string
                         onSelectionChange={handleSearchSelection}
                         isSearchUIDisabled={!isMapInteractive}
                     />
@@ -95,7 +110,7 @@ export default function InteractiveClientSections({ allBooks }: InteractiveClien
               <div className="max-w-[1280px] mx-auto px-4 py-8">
                  <BookList
                    initialBooks={allBooks} 
-                   continent={selectedContinent}
+                   continent={selectedContinent} // This selectedContinent is a single string for filtering
                    country={selectedCountry}
                  />
               </div>

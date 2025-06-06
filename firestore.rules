@@ -2,23 +2,18 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    match /books/{bookId}{
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == "server-key";
+    // 全てのコレクション、全てのドキュメントへの読み書きをデフォルトで拒否
+    match /{document=**} {
+      allow read, write: if false;
     }
 
-    match /country-division_name/{countryName}{
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == "server-key";
-    }
-    match /{document=**} {      
-      allow read,write: if false;
-    }
+    // 'books' コレクションへの読み取りのみを許可 (もしクライアントから読ませる必要がある場合)
+    // ただし、静的サイトでビルド時に全データを埋め込むなら、クライアントからの直接読み取りも不要
+    // match /books/{bookId} {
+    //   allow read: if true; // 公開データならtrue、認証ユーザーのみなら request.auth != null など
+    //   allow write: if false; // クライアントからの書き込みは基本不可
+    // }
+
+    // 将来的に他のコレクションを追加する場合も、同様に明示的にルールを設定
   }
 }
