@@ -1,14 +1,12 @@
 // import Layout from "@/components/Layout"; // Already removed
 import NewBooksClient from '@/components/NewBooksClient';
 import InteractiveClientSections from "@/components/InteractiveClientSections";
-// import booksDataFromFile from '@/lib/books.json'; // No longer using local JSON
 import { fetchAllBooksFromFirestore } from '@/lib/firebaseAdmin';
-import { getContinentByCountry, continentCountries } from "@/utils/continentCountries"; // continentCountriesもインポート
+import { getContinentByCountry } from "@/utils/continentCountries";
 
 // Updated Book interface
 interface Book {
   id?: string; 
-  // isbn?: string; // Removed
   title: string;
   author: string;
   image_url?: string;
@@ -21,47 +19,59 @@ interface Book {
   amazon_url?: string; 
 }
 
+// Interface for Firestore Timestamp like objects (as received by Admin SDK)
+interface FirestoreAdminTimestamp { 
+  seconds: number;
+  nanoseconds: number;
+  toDate: () => Date;
+}
+
 // Interface for data structure from Firestore
 interface FirestoreBookData {
   id?: string;
   author: string;
   country: string; 
-  created_at: any; 
+  created_at: FirestoreAdminTimestamp | string | Date; // Removed 'any'
   description: string;
   image_url?: string; 
   region: string; 
   title: string;
-  updated_at: any; 
+  updated_at: FirestoreAdminTimestamp | string | Date; // Removed 'any'
   url: string; // Amazon URL
-  // isbn is not expected from Firestore directly
 }
 
 // Helper to process a single book from Firestore data to Book type
 function processFirestoreBook(bookInput: FirestoreBookData): Book {
-  const imageUrl = bookInput.image_url || ""; // Use Firestore's image_url directly
+  const imageUrl = bookInput.image_url || ""; 
   
   const countries = bookInput.country ? bookInput.country.split(',').map(c => c.trim()) : [];
   const uniqueContinents = new Set<string>();
   if (countries.length > 0) {
     countries.forEach(singleCountry => {
       const continentForCountry = getContinentByCountry(singleCountry);
-      if (continentForCountry && continentForCountry !== "Unknown") { // Assuming "Unknown" is not a valid continent to add
+      if (continentForCountry && continentForCountry !== "Unknown") { 
         uniqueContinents.add(continentForCountry);
       }
     });
   }
   const continentsArray = uniqueContinents.size > 0 ? Array.from(uniqueContinents) : undefined;
 
-  const createdAtString = bookInput.created_at?.toDate ? bookInput.created_at.toDate().toISOString() : new Date(bookInput.created_at).toISOString();
-  const updatedAtString = bookInput.updated_at?.toDate ? bookInput.updated_at.toDate().toISOString() : new Date(bookInput.updated_at).toISOString();
+  // Ensure created_at and updated_at are properly handled if they are Firestore Timestamps or already strings/Dates
+  const createdAtString = typeof bookInput.created_at === 'string' ? bookInput.created_at :
+                        (bookInput.created_at instanceof Date ? bookInput.created_at.toISOString() :
+                        (bookInput.created_at && (bookInput.created_at as FirestoreAdminTimestamp).toDate) ? (bookInput.created_at as FirestoreAdminTimestamp).toDate().toISOString() : new Date().toISOString());
+  
+  const updatedAtString = typeof bookInput.updated_at === 'string' ? bookInput.updated_at :
+                        (bookInput.updated_at instanceof Date ? bookInput.updated_at.toISOString() :
+                        (bookInput.updated_at && (bookInput.updated_at as FirestoreAdminTimestamp).toDate) ? (bookInput.updated_at as FirestoreAdminTimestamp).toDate().toISOString() : new Date().toISOString());
 
   return {
     id: bookInput.id,
     title: bookInput.title,
     author: bookInput.author,
     image_url: imageUrl,
-    region: bookInput.region, // Keep as comma-separated string
-    country: bookInput.country, // Keep as comma-separated string
+    region: bookInput.region, 
+    country: bookInput.country, 
     description: bookInput.description,
     created_at: createdAtString,
     updated_at: updatedAtString,
@@ -72,12 +82,13 @@ function processFirestoreBook(bookInput: FirestoreBookData): Book {
 
 async function getProcessedNewBooks(): Promise<Book[]> {
   const allBooksFromFirestore = await fetchAllBooksFromFirestore();
-  const typedBooksData = allBooksFromFirestore as FirestoreBookData[];
+  // Assuming fetchAllBooksFromFirestore now returns FirestoreBookData[] typed correctly from firebaseAdmin.ts
+  const typedBooksData = allBooksFromFirestore as FirestoreBookData[]; 
 
   const sortedNewBooks = [...typedBooksData]
     .sort((a, b) => {
-        const dateA = a.created_at?.toDate ? a.created_at.toDate() : new Date(a.created_at);
-        const dateB = b.created_at?.toDate ? b.created_at.toDate() : new Date(b.created_at);
+        const dateA = a.created_at && (a.created_at as FirestoreAdminTimestamp).toDate ? (a.created_at as FirestoreAdminTimestamp).toDate() : new Date(a.created_at as string | Date);
+        const dateB = b.created_at && (b.created_at as FirestoreAdminTimestamp).toDate ? (b.created_at as FirestoreAdminTimestamp).toDate() : new Date(b.created_at as string | Date);
         return dateB.getTime() - dateA.getTime();
     })
     .slice(0, 12);

@@ -1,18 +1,19 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import * as topojson from "topojson-client";
 import * as d3geo from "d3-geo-projection";
 import { feature as topojsonFeature } from "topojson-client";
 import { Topology, GeometryCollection } from "topojson-specification";
-import { FeatureCollection, Geometry, GeoJsonProperties, Feature } from "geojson";
-import { continentCountries, getContinentByCountry } from "@/utils/continentCountries";
+import { FeatureCollection, Feature, Geometry } from "geojson"; // GeoJsonObject removed
+import { continentCountries } from "@/utils/continentCountries";
 import continentCoordinates from "@/lib/continentCoordinates.json";
 
 interface CountryProperties {
   name: string;
   continent?: string;
-  [key: string]: any;
+  ADMIN?: string;
+  NAME?: string;
+  [key: string]: unknown; 
 }
 
 type CountryFeature = Feature<Geometry, CountryProperties>;
@@ -22,7 +23,6 @@ type ContinentCoordinateMap = {
   [key in keyof typeof continentCoordinates]?: { latitude: number; longitude: number; }
 };
 const typedContinentCoordinates = continentCoordinates as ContinentCoordinateMap;
-
 
 interface MapProps {
   selectedCountry: string | null;
@@ -35,7 +35,8 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
   const svgRef = useRef<SVGSVGElement>(null);
   const [landFeatures, setLandFeatures] = useState<CountryFeature[]>([]);
   const projectionRef = useRef<d3.GeoProjection | null>(null);
-  const geoPathRef = useRef<d3.GeoPath | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const geoPathRef = useRef<d3.GeoPath<any, d3.GeoPermissibleObjects> | null>(null);
   const gRef = useRef<SVGGElement | null>(null);
 
   const [mapWidth, setMapWidth] = useState(0);
@@ -58,7 +59,6 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
 
   useEffect(() => {
     if (mapWidth > 0 && mapHeight > 0 && !hasMapInitialized) {
-      // Proceed to fetch data and draw only if dimensions are set and not already initialized
     } else {
         return; 
     }
@@ -69,47 +69,49 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
         const land = topojsonFeature(
           worldData,
           worldData.objects.ne_10m_admin_0_countries
-        ) as FeatureCollection<Geometry, GeoJsonProperties>;
+        ) as FeatureCollection<Geometry, CountryProperties>; 
+        
         const featuresWithContinent: CountryFeature[] = land.features
           .map((feature) => {
-            const countryName = feature.properties?.NAME || feature.properties?.name || feature.properties?.ADMIN;
+            const props = feature.properties as CountryProperties;
+            const countryName = props?.NAME || props?.name || props?.ADMIN;
             if (!countryName || typeof countryName !== 'string') return null;
             let continent: string = "";
-            for (const continentEntry in continentCountries) {
-              if (continentCountries[continentEntry as keyof typeof continentCountries].includes(countryName)) {
-                continent = continentEntry;
+            for (const cName in continentCountries) {
+              if (continentCountries[cName as keyof typeof continentCountries].includes(countryName)) {
+                continent = cName;
                 break;
               }
             }
-            const properties: CountryProperties = { ...(feature.properties as GeoJsonProperties), name: countryName, continent: continent };
-            return { ...feature, properties: properties } as CountryFeature;
+            const newProperties: CountryProperties = { ...props, name: countryName, continent: continent };
+            return { ...feature, properties: newProperties } as CountryFeature;
           })
           .filter((feature): feature is CountryFeature => feature !== null);
         setLandFeatures(featuresWithContinent); 
 
         const svg = d3.select(svgRef.current);
         projectionRef.current = d3geo.geoMollweide();
-        let g = svg.select<SVGGElement>("#map-group");
+        const g = svg.select<SVGSVGElement>("#map-group");
         if (g.empty()) {
-          gRef.current = svg.append("g").attr("id", "map-group").node();
+          gRef.current = svg.append("g").attr("id", "#map-group").node();
         } else {
           gRef.current = g.node();
         }
         if (!gRef.current || !projectionRef.current) return; 
-
-        // Fit to Sphere for initial display
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         projectionRef.current.fitExtent([[0, 0], [mapWidth, mapHeight]], { type: "Sphere" } as any);
         geoPathRef.current = d3.geoPath(projectionRef.current);
         if (!geoPathRef.current) return;
 
-        // Draw paths using landFeatures
         d3.select(gRef.current)
           .selectAll<SVGPathElement, CountryFeature>("path.country")
           .data(featuresWithContinent, (d) => d.properties.name)
           .join(
             enter => enter.append("path")
               .attr("class", "country")
-              .attr("d", geoPathRef.current as any)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .attr("d", geoPathRef.current! as any) 
               .attr("fill", "#212121") 
               .on("click", function (event, d) {
                 const name = d.properties.name;
@@ -117,41 +119,45 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
                 if (name && name !== "Unknown") onCountryClick(name, continent || null);
                 else onCountryClick(null, null);
               })
-              // Mouse events will be fully managed by the other useEffect that depends on selectedCountry
               .style("stroke", "#fff")
               .style("stroke-width", "0.3"),
-            update => update.attr("d", geoPathRef.current as any),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            update => update.attr("d", geoPathRef.current! as any),
             exit => exit.remove()
           );
-        
-        // Only call onMapReady once after the first successful draw attempt
-        if (gRef.current) { // featuresWithContinent.length > 0 check is implicitly handled by data join
-            onMapReady && onMapReady();
+
+        if (gRef.current) { 
+            if (onMapReady) {
+                onMapReady();
+            }
             setHasMapInitialized(true);
         }
 
       } catch (error) {
-        console.error("Error loading or processing map data:", error);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.error("Error loading or processing map data:", error as any);
       }
     };
     fetchDataAndDrawMap();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapWidth, mapHeight, onMapReady, hasMapInitialized]); // Removed landFeatures.length, selectedCountry. Mouse events are in dedicated effect.
+  }, [mapWidth, mapHeight, onMapReady, hasMapInitialized]);
 
   useEffect(() => {
     if (!svgRef.current || !projectionRef.current || !gRef.current || landFeatures.length === 0 || mapWidth === 0 || mapHeight === 0 || !hasMapInitialized) return;
     const g = d3.select(gRef.current);
     const projection = projectionRef.current;
-    let targetFeatureForFitExtent: Feature<Geometry, CountryProperties> | FeatureCollection<Geometry, CountryProperties> | { type: "Sphere" } | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let targetFeatureForFitExtent: any | null = null; 
+
     let newRotation: [number, number, number] = [0, 0, 0];
 
     if (selectedCountry) {
       const countryFeature = landFeatures.find(f => f.properties.name === selectedCountry);
       if (countryFeature) {
         targetFeatureForFitExtent = countryFeature;
-        const centroid = d3.geoCentroid(countryFeature);
+        const centroid = d3.geoCentroid(countryFeature); 
         newRotation = [-centroid[0], -centroid[1], 0];
-      } else { // Fallback to sphere if selectedCountry not found (should ideally not happen)
+      } else { 
         targetFeatureForFitExtent = { type: "Sphere" };
       }
     } else if (selectedContinent && selectedContinent !== "Seven seas (open ocean)") {
@@ -159,8 +165,8 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
       if (coords) newRotation = [-coords.longitude, -coords.latitude, 0];
       const continentFeatures = landFeatures.filter(f => f.properties.continent === selectedContinent);
       if (continentFeatures.length > 0) {
-        targetFeatureForFitExtent = { type: "FeatureCollection", features: continentFeatures } as FeatureCollection<Geometry, CountryProperties>;
-      } else { // Fallback to sphere if no features for continent
+        targetFeatureForFitExtent = { type: "FeatureCollection", features: continentFeatures };
+      } else { 
         targetFeatureForFitExtent = { type: "Sphere" };
       }
     } else { 
@@ -168,17 +174,19 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
     }
     
     projection.rotate(newRotation);
-    
+
     if (targetFeatureForFitExtent) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         projection.fitExtent([[0, 0], [mapWidth, mapHeight]], targetFeatureForFitExtent as any);
     }
-    
+
     geoPathRef.current = d3.geoPath(projection);
 
     g.selectAll("path.country")
       .transition()
       .duration(300)
-      .attr("d", geoPathRef.current as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .attr("d", geoPathRef.current! as any); 
 
   }, [selectedCountry, selectedContinent, landFeatures, mapWidth, mapHeight, hasMapInitialized]);
 

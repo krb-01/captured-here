@@ -4,20 +4,20 @@
 import React, { useState, useEffect } from 'react';
 import { initializeGA, updateAnalyticsConsent } from '@/lib/firebaseInit'; // Import GA functions
 
-const COOKIE_CONSENT_KEY = 'cookie_consent_status'; // Changed key name for clarity
+const COOKIE_CONSENT_KEY = 'cookie_consent_status';
 
 const CookieBanner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [gaInitialized, setGaInitialized] = useState(false); // Track GA initialization
+  const [gaInitialized, setGaInitialized] = useState(false);
 
   useEffect(() => {
     const consentStatus = localStorage.getItem(COOKIE_CONSENT_KEY);
 
     if (!consentStatus) { 
       setIsVisible(true);
-      updateAnalyticsConsent('rejected'); // Default to denied
+      updateAnalyticsConsent('rejected');
     } else if (consentStatus === 'accepted') {
-      updateAnalyticsConsent('accepted'); // Ensure consent is set
+      updateAnalyticsConsent('accepted');
       if (!gaInitialized) {
         initializeGA().then(analyticsInstance => {
           if (analyticsInstance) {
@@ -25,10 +25,10 @@ const CookieBanner: React.FC = () => {
           }
         });
       }
-    } else { // consentStatus === 'rejected'
-      updateAnalyticsConsent('rejected'); // Ensure consent is set
+    } else { 
+      updateAnalyticsConsent('rejected');
     }
-  }, [gaInitialized]); // Depend on gaInitialized to re-run if needed after initialization attempt
+  }, [gaInitialized]);
 
   const handleAccept = () => {
     localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
@@ -57,7 +57,7 @@ const CookieBanner: React.FC = () => {
     <div className="fixed bottom-0 left-0 right-0 bg-[#212121] text-white p-4 shadow-lg z-[100]">
       <div className="max-w-screen-lg mx-auto flex flex-col sm:flex-row justify-between items-center">
         <p className="text-sm mb-4 sm:mb-0">
-          We use cookies to enhance your experience and for analytics purposes. By clicking "Accept", you agree to our use of cookies.
+          We use cookies to enhance your experience and for analytics purposes. By clicking &quot;Accept&quot;, you agree to our use of cookies.
         </p>
         <div className="flex gap-4">
           <button

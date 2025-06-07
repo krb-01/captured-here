@@ -1,14 +1,27 @@
 // src/lib/firebaseAdmin.ts
-import admin from 'firebase-admin';
+// import admin from 'firebase-admin'; // Removed
 import { App, getApps, initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
-import fs from 'fs'; // fsモジュールをインポート
-import path from 'path'; // pathモジュールをインポート
+import { getFirestore, Firestore, Timestamp as AdminTimestamp } from 'firebase-admin/firestore'; // Imported AdminTimestamp
+import fs from 'fs';
+import path from 'path';
 
-// Construct path to service account key relative to project root
-// This assumes the service account key is in the project root or a defined path
-const serviceAccountKeyFileName = 'serviceAccountKey.json'; // Or your actual file name
-const projectRootDir = process.cwd(); // Gets the current working directory (project root)
+// Firestore data structure interface (should ideally be shared or kept in sync with page.tsx)
+interface FirestoreBookData {
+  id?: string; // Document ID, added when processing snapshot
+  author: string;
+  country: string; // Comma-separated string
+  created_at: AdminTimestamp | string | Date; // Firestore Admin SDK Timestamp or string/Date for flexibility
+  description: string;
+  image_url?: string;
+  region: string; // Comma-separated string
+  title: string;
+  updated_at: AdminTimestamp | string | Date; // Firestore Admin SDK Timestamp or string/Date
+  url: string; // Amazon URL
+  // isbn is not directly in Firestore based on current understanding
+}
+
+const serviceAccountKeyFileName = 'serviceAccountKey.json';
+const projectRootDir = process.cwd();
 const localServiceAccountPath = path.join(projectRootDir, serviceAccountKeyFileName);
 
 let firebaseAdminApp: App | null = null;
@@ -22,21 +35,23 @@ function initializeFirebaseAdminApp() {
         firebaseAdminApp = initializeApp({
           credential: cert(serviceAccount),
         });
-        console.log("Firebase Admin SDK initialized using GOOGLE_APPLICATION_CREDENTIALS_JSON_STRING.");
+        // console.log("Firebase Admin SDK initialized using GOOGLE_APPLICATION_CREDENTIALS_JSON_STRING.");
       } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS && fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
-        // GOOGLE_APPLICATION_CREDENTIALS is a file path
         firebaseAdminApp = initializeApp({
           credential: cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
         }); 
-        console.log("Firebase Admin SDK initialized using GOOGLE_APPLICATION_CREDENTIALS file path.");
+        // console.log("Firebase Admin SDK initialized using GOOGLE_APPLICATION_CREDENTIALS file path.");
       } else if (fs.existsSync(localServiceAccountPath)) {
         const serviceAccount = JSON.parse(fs.readFileSync(localServiceAccountPath, 'utf8'));
         firebaseAdminApp = initializeApp({
           credential: cert(serviceAccount),
         });
-        console.log(`Firebase Admin SDK initialized using local file: ${localServiceAccountPath}`);
+        // console.log(`Firebase Admin SDK initialized using local file: ${localServiceAccountPath}`);
+      } else if (process.env.FUNCTIONS_EMULATOR === 'true' || process.env.GOOGLE_CLOUD_PROJECT) {
+        firebaseAdminApp = initializeApp();
+        // console.log("Firebase Admin SDK initialized using default credentials (emulator or GCP environment).");
       } else {
-        console.warn("Firebase Admin SDK: Service account key not found. Firestore access will fail. Checked env vars and local path: ", localServiceAccountPath);
+        console.warn(`Firebase Admin SDK: Service account key could not be found. Firestore access will likely fail.`);
         return null;
       }
     } catch (error) {
@@ -59,7 +74,7 @@ export const getDb = (): Firestore | null => {
   return db;
 };
 
-export async function fetchAllBooksFromFirestore(): Promise<any[]> { 
+export async function fetchAllBooksFromFirestore(): Promise<FirestoreBookData[]> { 
   const firestoreDb = getDb();
   if (!firestoreDb) {
     console.error("Firestore instance is not available for fetchAllBooksFromFirestore.");
@@ -73,11 +88,14 @@ export async function fetchAllBooksFromFirestore(): Promise<any[]> {
       console.log('No matching documents in books collection.');
       return [];
     }
-    const books: any[] = [];
+    const books: FirestoreBookData[] = [];
     snapshot.forEach(doc => {
-      books.push({ id: doc.id, ...doc.data() }); 
+      const data = doc.data() as Omit<FirestoreBookData, 'id'>;
+      books.push({
+        id: doc.id,
+        ...data
+      } as FirestoreBookData);
     });
-    // console.log(`Fetched ${books.length} books from Firestore.`); // Reduced verbosity
     return books;
   } catch (error) {
     console.error("Error fetching books from Firestore:", error);

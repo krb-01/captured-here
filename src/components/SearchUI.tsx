@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react'; // useCallback removed
 import continentsFromFile from '@/lib/continentCoordinates.json';
 import allBooks from "@/lib/books.json";
 import { getContinentByCountry } from "@/utils/continentCountries";
@@ -55,18 +55,17 @@ const SearchUI: React.FC<SearchUIProps> = ({
     }
   };
 
-  // Placeholder text color class
   const placeholderTextColorClass = "text-gray-400";
 
   return (
     <div className={`p-2 rounded-lg bg-white border border-gray-300 ${isSearchUIDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-      <div className="hyphens-auto p-4">
+      <div className="hyphens-auto mt-2 mb-4 p-2 text-sm text-gray-600">
         Select a continent and country to discover curated art photography
         monographs and regional works.
       </div>
-      <div className="p-4">
+      <div className="mb-4">
         <label htmlFor="continent-select" className="block text-sm font-medium text-gray-700 mb-1">
-          CONTINENT:
+          CONTINENT
         </label>
         <select
           id="continent-select"
@@ -85,9 +84,9 @@ const SearchUI: React.FC<SearchUIProps> = ({
           ))}
         </select>
       </div>
-      <div className="p-4 mb-3">
+      <div>
         <label htmlFor="country-select" className="block text-sm font-medium text-gray-700 mb-1">
-          COUNTRY:
+          COUNTRY
         </label>
         <select
           id="country-select"

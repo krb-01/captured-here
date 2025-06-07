@@ -1,35 +1,33 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import Image from 'next/image'; // Import next/image
 
 interface BookListProps {
   initialBooks: Book[]; 
-  continent?: string | null; // This is the selected continent (single string)
-  country?: string | null;   // This is the selected country (single string)
+  continent?: string | null;
+  country?: string | null;
 }
 
-// Updated Book interface
 interface Book {
   id?: string;
-  // isbn?: string; // Removed
   title: string;
   author: string;
   image_url?: string;
-  region: string; // Comma-separated string
-  country: string; // Comma-separated string
+  region: string;
+  country: string;
   description: string;
   created_at: string;
   updated_at: string;
-  continent?: string[]; // Array of continent names
+  continent?: string[];
   amazon_url?: string;
 }
 
 const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country }) => {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
-  const [showDescriptionIsbn, setShowDescriptionIsbn] = useState<string | null>(null); // Will use uniqueKey
+  const [showDescriptionIsbn, setShowDescriptionIsbn] = useState<string | null>(null);
   const activeOverlayRef = useRef<HTMLDivElement>(null);
 
   const currentFilteredBooks = useMemo(() => {
     let newFilteredBooks = [...initialBooks]; 
-
     if (continent) {
       newFilteredBooks = newFilteredBooks.filter(
         (book) => book.continent && book.continent.includes(continent)
@@ -47,7 +45,7 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
     setFilteredBooks(currentFilteredBooks);
   }, [currentFilteredBooks]);
 
-  let titleText = "Book List"; // Renamed variable to avoid conflict with component's title prop if ever used
+  let titleText = "Book List";
   if (continent) {
     titleText += ` - ${continent}`;
   }
@@ -91,27 +89,28 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
                 className="relative flex flex-col justify-between rounded-lg bg-white p-4 shadow-sm"
               >
                 <div className="h-full flex-1 bg-white">
-                  <div className="mb-4">
+                  {/* Image container needs to be relative for fill to work */}
+                  <div className="relative w-full aspect-square mb-4">
                     {book.image_url ? (
-                      <img
+                      <Image
                         src={book.image_url}
                         alt={`Cover of ${book.title} by ${book.author}`}
-                        className="w-full aspect-square object-contain rounded-md"
+                        fill
+                        className="object-contain rounded-md"
+                        // priority prop might be less critical here unless specific items are known to be above the fold
                       />
                     ) : (
-                      <div className="w-full aspect-square object-contain rounded-md">
-                        <img
-                          src="/file.svg" 
-                          alt="Book cover placeholder"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
+                      <Image
+                        src="/file.svg" 
+                        alt="Book cover placeholder"
+                        fill
+                        className="object-contain rounded-md"
+                      />
                     )}
                   </div>
                   <div className="mb-2">
                     <p className="font-bold text-black">{book.title}</p>
                     <p className="text-sm text-black">by {book.author}</p>
-                    {/* Country display can be added here if desired, e.g., <p className="text-sm text-gray-600">{book.country}</p> */}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-4 ">

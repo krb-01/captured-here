@@ -4,7 +4,7 @@ export const continentCountries = {
         'Somaliland', 'Morocco', 'W. Sahara', 'Congo', 'Dem. Rep. Congo',
         'Namibia', 'South Africa', 'Libya', 'Tunisia', 'Zambia', 'Sierra Leone',
         'Guinea', 'Liberia', 'Central African Rep.', 'Sudan', 'Djibouti',
-        'Eritrea', 'Côte d\'Ivoire', 'Mali', 'Senegal', 'Nigeria', 'Benin',
+        'Eritrea', "Côte d'Ivoire", 'Mali', 'Senegal', 'Nigeria', 'Benin', // Changed to double quotes
         'Angola', 'Botswana', 'Zimbabwe', 'Chad', 'Algeria', 'Mozambique',
         'eSwatini', 'Burundi', 'Rwanda', 'Uganda', 'Lesotho', 'Cameroon',
         'Gabon', 'Niger', 'Burkina Faso', 'Togo', 'Ghana', 'Guinea-Bissau',
@@ -73,7 +73,6 @@ export const continentCountries = {
 };
 
 export function getContinentByCountry(country: string): string | null {
-  const localCountry = country;
   for (const continent in continentCountries) {
     if (
       continentCountries[continent as keyof typeof continentCountries].includes(

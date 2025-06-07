@@ -1,6 +1,6 @@
 // src/app/terms-of-service/page.tsx
-import Link from 'next/link';
-// import Layout from '@/components/Layout'; // Layout import removed
+import Link from 'next/link'; // Link is used for "Back to Home"
+// import Layout from '@/components/Layout'; // Should have been removed
 
 export default function TermsOfServicePage() {
   const today = new Date();
@@ -11,12 +11,11 @@ export default function TermsOfServicePage() {
   });
 
   return (
-    // Layout wrapper removed, applying similar styling as privacy-policy page
     <div className="max-w-[1280px] mx-auto px-4 py-8 bg-white text-black">
       <h1 className="text-3xl font-bold mb-6">Terms of Service for <em>CAPTURED HERE</em></h1>
       <p className="mb-4"><strong>Effective Date:</strong> {formattedDate}</p>
       <p className="mb-6">
-        Welcome to our website (hereinafter referred to as "the Site"). By using the Site, you agree to comply with and be bound by the following terms and conditions of use (hereinafter referred to as "these Terms"). Please review these Terms carefully.
+        Welcome to our website (hereinafter referred to as &quot;the Site&quot;). By using the Site, you agree to comply with and be bound by the following terms and conditions of use (hereinafter referred to as &quot;these Terms&quot;). Please review these Terms carefully.
       </p>
 
       <hr className="my-6" />
@@ -53,7 +52,7 @@ export default function TermsOfServicePage() {
         Copyrights and other intellectual property rights related to content on the Site (including text, images, map data, book information, etc.) belong to the Site or to third parties who have legitimate rights. Unauthorized use (including reproduction, transmission, distribution, modification, etc.) of this content beyond the scope permitted by law is prohibited.
       </p>
       <p className="mb-4">
-        Book cover images may be displayed for the purpose of referencing product pages on Amazon.co.jp, in accordance with Amazon's terms.
+        Book cover images may be displayed for the purpose of referencing product pages on Amazon.co.jp, in accordance with Amazon&apos;s terms.
       </p>
 
       <hr className="my-6" />
@@ -89,7 +88,11 @@ export default function TermsOfServicePage() {
 
       <hr className="my-6" />
       
-
+      <div className="mt-8 text-center">
+          <Link href="/" className="text-blue-600 hover:underline">
+            Back to Home
+          </Link>
+      </div>
     </div>
   );
 }

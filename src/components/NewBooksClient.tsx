@@ -1,19 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image'; // Import next/image
 
-// Updated Book interface
 interface Book {
   id?: string;
   title: string;
   author: string;
   image_url?: string;
-  region: string; // Comma-separated string from Firestore
-  country: string; // Comma-separated string from Firestore
+  region: string;
+  country: string;
   description: string;
   created_at: string; 
   updated_at: string; 
-  continent?: string[]; // Array of continent names
+  continent?: string[];
   amazon_url?: string; 
 }
 
@@ -68,18 +68,21 @@ const NewBooksClient: React.FC<NewBooksClientProps> = ({ initialBooks }) => {
               key={uniqueKeyForBook}
               className="relative rounded-lg p-4 border border-gray-300 flex flex-col justify-between h-full bg-white"
             >
-              <div className="mb-4">
+              <div className="relative w-full aspect-square mb-4"> {/* Added relative positioning and dimensions for Image fill */}
                 {book.image_url ? (
-                  <img
+                  <Image
                     src={book.image_url}
                     alt={`Cover of ${book.title} by ${book.author}`}
-                    className="w-full aspect-square object-contain rounded-md"
+                    fill
+                    className="object-contain rounded-md"
+                    priority={initialBooks.slice(0,4).includes(book)} // Prioritize loading for the first few images in NewArrivals
                   />
                 ) : ( 
-                  <img
+                  <Image
                     src="/window.svg"
                     alt="Book cover placeholder"
-                    className="w-full aspect-square object-contain rounded-md"
+                    fill
+                    className="object-contain rounded-md"
                   />
                 )}
               </div>
