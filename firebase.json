@@ -15,11 +15,12 @@
         "*.local"
       ],
       "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run build"
+        "npm --prefix \\\"$RESOURCE_DIR\\\" run build"
       ]
     }
   ],
   "hosting": {
+    "site": "krbapps",
     "public": "out",
     "ignore": [
       "firebase.json",
