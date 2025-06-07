@@ -42,14 +42,23 @@ jobs:
 
       - name: Deploy to Firebase Hosting
         run: |
+          echo "Firebase CLI Version:"
+          firebase --version
+
+          echo "Creating service account key file..."
           # サービスアカウントキーのJSON文字列を一時ファイルに書き出す
+          # シークレットの内容が正しくJSONとして解釈されることが重要
           echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_STRING }}" > ./service-account-key.json
-          # 環境変数 GOOGLE_APPLICATION_CREDENTIALS にキーファイルのパスを設定
-          export GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json
           
-          # --token を削除し、サービスアカウント認証でデプロイ
+          echo "Authenticating with Firebase CLI using service account..."
+          # サービスアカウントキーファイルを使用してFirebase CLIにログイン
+          firebase login:ci --service-account --json ./service-account-key.json --project krbapps
+          
+          echo "Deploying to Firebase Hosting..."
+          # 認証済みのCLIでデプロイを実行 (以前のexport GOOGLE_APPLICATION_CREDENTIALS は不要)
           firebase deploy --only hosting --project krbapps --force
           
+          echo "Cleaning up service account key file..."
           # セキュリティのため、一時ファイルを削除
           rm ./service-account-key.json
         # --project krbapps は .firebaserc で default が設定されていれば不要な場合もあるが、明示的に指定
