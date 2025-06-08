@@ -91,9 +91,9 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
 
         const svg = d3.select(svgRef.current);
         projectionRef.current = d3geo.geoMollweide();
-        const g = svg.select<SVGSVGElement>("#map-group");
+        const g = svg.select<SVGGElement>("#map-group");
         if (g.empty()) {
-          gRef.current = svg.append("g").attr("id", "#map-group").node();
+          gRef.current = svg.append("g").attr("id", "map-group").node();
         } else {
           gRef.current = g.node();
         }
@@ -126,7 +126,7 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
             exit => exit.remove()
           );
 
-        if (gRef.current) { 
+        if (gRef.current) {
             if (onMapReady) {
                 onMapReady();
             }
@@ -143,9 +143,10 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
   }, [mapWidth, mapHeight, onMapReady, hasMapInitialized]);
 
   useEffect(() => {
-    if (!svgRef.current || !projectionRef.current || !gRef.current || landFeatures.length === 0 || mapWidth === 0 || mapHeight === 0 || !hasMapInitialized) return;
+    if (!gRef.current || landFeatures.length === 0 || !hasMapInitialized) return;
     const g = d3.select(gRef.current);
     const projection = projectionRef.current;
+    if (!projection) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let targetFeatureForFitExtent: any | null = null; 
 
@@ -157,7 +158,7 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
         targetFeatureForFitExtent = countryFeature;
         const centroid = d3.geoCentroid(countryFeature); 
         newRotation = [-centroid[0], -centroid[1], 0];
-      } else { 
+      } else {
         targetFeatureForFitExtent = { type: "Sphere" };
       }
     } else if (selectedContinent && selectedContinent !== "Seven seas (open ocean)") {
@@ -166,10 +167,10 @@ const Map: React.FC<MapProps> = ({ selectedCountry, selectedContinent, onCountry
       const continentFeatures = landFeatures.filter(f => f.properties.continent === selectedContinent);
       if (continentFeatures.length > 0) {
         targetFeatureForFitExtent = { type: "FeatureCollection", features: continentFeatures };
-      } else { 
+      } else {
         targetFeatureForFitExtent = { type: "Sphere" };
       }
-    } else { 
+    } else {
       targetFeatureForFitExtent = { type: "Sphere" };
     }
     

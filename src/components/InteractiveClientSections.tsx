@@ -59,8 +59,8 @@ export default function InteractiveClientSections({ allBooks }: InteractiveClien
         } else if (country && country !== "Unknown") {
             setSelectedCountry(country);
             setSelectedContinent(getContinentByCountry(country));
-        } else { 
-            setSelectedCountry(null);
+        } else {
+             setSelectedCountry(null);
             setSelectedContinent(continent);
         }
     }, []);
@@ -86,6 +86,7 @@ export default function InteractiveClientSections({ allBooks }: InteractiveClien
                         selectedContinent={selectedContinent}
                         onSelectionChange={handleSearchSelection}
                         isSearchUIDisabled={!isMapInteractive}
+                        allBooks={allBooks}
                     />
                 </div>
             </section>

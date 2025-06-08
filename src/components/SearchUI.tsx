@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from 'react'; // useCallback removed
 import continentsFromFile from '@/lib/continentCoordinates.json';
-import allBooks from "@/lib/books.json";
+// import allBooks from "@/lib/books.json"; // この行を削除
 import { getContinentByCountry } from "@/utils/continentCountries";
+
+// Book インターフェースをここで定義するか、共通の型ファイルからインポートします。
+// 今回は簡易のためここで定義します。InteractiveClientSections.tsx のものと同じ内容です。
+interface Book {
+  id?: string; 
+  title: string;
+  author: string;
+  image_url?: string;
+  region: string; 
+  country: string; 
+  description: string;
+  created_at: string; 
+  updated_at: string; 
+  continent?: string[];
+  amazon_url?: string; 
+}
 
 interface SearchUIProps {
   selectedContinent: string | null;
   selectedCountry: string | null;
   onSelectionChange: (country: string | null, continent: string | null) => void;
   isSearchUIDisabled?: boolean;
+  allBooks: Book[]; // allBooks prop を追加
 }
 
 const SearchUI: React.FC<SearchUIProps> = ({
@@ -15,6 +32,7 @@ const SearchUI: React.FC<SearchUIProps> = ({
   selectedCountry,
   onSelectionChange,
   isSearchUIDisabled,
+  allBooks, // allBooks prop を受け取る
 }) => {
   const [countries, setCountries] = useState<string[]>([]);
   const [isCountrySelectDisabled, setIsCountrySelectDisabled] = useState(true);
@@ -25,7 +43,7 @@ const SearchUI: React.FC<SearchUIProps> = ({
       setCountries([]);
       setIsCountrySelectDisabled(true); 
     } else if (selectedContinent) {
-      const countryList = allBooks
+      const countryList = allBooks // props から受け取った allBooks を使用
         .filter((book) => getContinentByCountry(book.country) === selectedContinent)
         .map((book) => book.country)
         .filter((value, index, self) => self.indexOf(value) === index)
@@ -37,7 +55,7 @@ const SearchUI: React.FC<SearchUIProps> = ({
       setIsCountrySelectDisabled(true);
     }
     setCurrentSelectedCountry(null); 
-  }, [selectedContinent]);
+  }, [selectedContinent, allBooks]); // 依存配列に allBooks を追加
 
   useEffect(() => {
     setCurrentSelectedCountry(selectedCountry);
