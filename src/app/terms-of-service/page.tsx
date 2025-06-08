@@ -1,5 +1,3 @@
-// src/app/terms-of-service/page.tsx
-import Link from 'next/link'; // Link is used for "Back to Home"
 // import Layout from '@/components/Layout'; // Should have been removed
 
 export default function TermsOfServicePage() {
