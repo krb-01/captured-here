@@ -76,8 +76,8 @@ const SearchUI: React.FC<SearchUIProps> = ({
   const placeholderTextColorClass = "text-gray-400";
 
   return (
-    <div className={`p-2 rounded-lg bg-white border border-gray-300 ${isSearchUIDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-      <div className="hyphens-auto mt-2 mb-4 p-2 text-sm text-gray-600">
+    <div className={`p-4 rounded-lg bg-white border border-gray-300 ${isSearchUIDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+      <div className="hyphens-auto mb-4 text-sm text-gray-600">
         Select a continent and country to discover curated art photography
         monographs and regional works.
       </div>
