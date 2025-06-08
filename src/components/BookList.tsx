@@ -21,10 +21,13 @@ interface Book {
   amazon_url?: string;
 }
 
+const BOOKS_PER_PAGE = 20;
+
 const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country }) => {
-  const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [showDescriptionIsbn, setShowDescriptionIsbn] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const activeOverlayRef = useRef<HTMLDivElement>(null);
+  const listContainerRef = useRef<HTMLDivElement>(null); // For scrolling
 
   const currentFilteredBooks = useMemo(() => {
     let newFilteredBooks = [...initialBooks]; 
@@ -42,8 +45,13 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
   }, [initialBooks, continent, country]);
 
   useEffect(() => {
-    setFilteredBooks(currentFilteredBooks);
+    setCurrentPage(1);
   }, [currentFilteredBooks]);
+  
+  const totalPages = Math.ceil(currentFilteredBooks.length / BOOKS_PER_PAGE);
+  const startIndex = (currentPage - 1) * BOOKS_PER_PAGE;
+  const endIndex = startIndex + BOOKS_PER_PAGE;
+  const paginatedBooks = currentFilteredBooks.slice(startIndex, endIndex);
 
   let titleText = "Book List";
   if (continent) {
@@ -74,14 +82,31 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
     }
   }, [showDescriptionIsbn]);
 
+  const scrollToTop = () => {
+    if (listContainerRef.current) {
+      // Use a more specific block position to avoid scrolling the whole page if possible
+      listContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+    scrollToTop();
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+    scrollToTop();
+  };
+
   return (
-    <div className="pb-16">
+    <div ref={listContainerRef} className="pb-16">
       <h2 className="text-2xl font-bold text-white pt-8 mb-8">{titleText}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
-        {filteredBooks.length === 0 ? (
+        {paginatedBooks.length === 0 ? (
           <p className="text-white">No items found</p>
         ) : (
-          filteredBooks.map((book) => {
+          paginatedBooks.map((book) => {
             const uniqueKeyForBook = book.id || book.title; 
             return (
               <div
@@ -97,7 +122,6 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
                         alt={`Cover of ${book.title} by ${book.author}`}
                         fill
                         className="object-contain rounded-md"
-                        // priority prop might be less critical here unless specific items are known to be above the fold
                       />
                     ) : (
                       <Image
@@ -162,6 +186,28 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
           })
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center mt-14 text-white">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="bg-white hover:bg-gray-200 text-[#212121] font-bold py-2 px-4 rounded-l disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Previous
+          </button>
+          <span className="py-2 px-4 bg-[#212121]">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="bg-white hover:bg-gray-200 text-[#212121] font-bold py-2 px-4 rounded-r disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -87,12 +87,7 @@ export default function TermsOfServicePage() {
       </p>
 
       <hr className="my-6" />
-      
-      <div className="mt-8 text-center">
-          <Link href="/" className="text-blue-600 hover:underline">
-            Back to Home
-          </Link>
-      </div>
+    
     </div>
   );
 }
