@@ -28,6 +28,7 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
   const [currentPage, setCurrentPage] = useState(1);
   const activeOverlayRef = useRef<HTMLDivElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null); // For scrolling
+  const isInitialLoad = useRef(true); // To prevent scrolling on initial load
 
   const currentFilteredBooks = useMemo(() => {
     let newFilteredBooks = [...initialBooks]; 
@@ -44,6 +45,7 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
     return newFilteredBooks;
   }, [initialBooks, continent, country]);
 
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [currentFilteredBooks]);
@@ -52,6 +54,25 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
   const startIndex = (currentPage - 1) * BOOKS_PER_PAGE;
   const endIndex = startIndex + BOOKS_PER_PAGE;
   const paginatedBooks = currentFilteredBooks.slice(startIndex, endIndex);
+
+  // Scroll to top when currentPage changes, but not on initial load
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+
+    if (listContainerRef.current) {
+      const headerOffset = 80; // Adjust this value to match your header height
+      const elementPosition = listContainerRef.current.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentPage]);
 
   let titleText = "Book List";
   if (continent) {
@@ -69,34 +90,12 @@ const BookList: React.FC<BookListProps> = ({ initialBooks, continent, country })
     }
   };
 
-  useEffect(() => {
-    const mobileBreakpoint = 1024;
-    if (showDescriptionIsbn && activeOverlayRef.current && window.innerWidth < mobileBreakpoint) {
-      const headerHeight = 80;
-      const elementPosition = activeOverlayRef.current.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
-  }, [showDescriptionIsbn]);
-
-  const scrollToTop = () => {
-    if (listContainerRef.current) {
-      // Use a more specific block position to avoid scrolling the whole page if possible
-      listContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   const handleNextPage = () => {
     setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
-    scrollToTop();
   };
 
   const handlePrevPage = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
-    scrollToTop();
   };
 
   return (

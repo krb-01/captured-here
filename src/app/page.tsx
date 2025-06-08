@@ -65,6 +65,20 @@ function processFirestoreBook(bookInput: FirestoreBookData): Book {
                         (bookInput.updated_at instanceof Date ? bookInput.updated_at.toISOString() :
                         (bookInput.updated_at && (bookInput.updated_at as FirestoreAdminTimestamp).toDate) ? (bookInput.updated_at as FirestoreAdminTimestamp).toDate().toISOString() : new Date().toISOString());
 
+  // Add associate ID to Amazon URL
+  const associateId = process.env.NEXT_PUBLIC_AMAZON_ASSOCIATE_ID || 'kairikubooks-20'; // Fallback to your ID
+  let finalAmazonUrl = bookInput.url;
+  if (finalAmazonUrl) {
+    try {
+      const url = new URL(finalAmazonUrl);
+      url.searchParams.set('tag', associateId);
+      finalAmazonUrl = url.toString();
+    } catch (error) {
+      console.error(`Invalid Amazon URL found: ${finalAmazonUrl}`, error);
+      // If URL is invalid, use the original URL
+    }
+  }
+
   return {
     id: bookInput.id,
     title: bookInput.title,
@@ -76,7 +90,7 @@ function processFirestoreBook(bookInput: FirestoreBookData): Book {
     created_at: createdAtString,
     updated_at: updatedAtString,
     continent: continentsArray,
-    amazon_url: bookInput.url,
+    amazon_url: finalAmazonUrl, // Use the modified URL
   } as Book;
 }
 

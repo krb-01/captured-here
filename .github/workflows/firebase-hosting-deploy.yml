@@ -16,6 +16,7 @@ jobs:
       NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
       NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+      NEXT_PUBLIC_AMAZON_ASSOCIATE_ID: ${{ secrets.NEXT_PUBLIC_AMAZON_ASSOCIATE_ID }}
 
     steps:
       - name: Checkout repository
@@ -28,7 +29,6 @@ jobs:
           cache: 'npm'
 
       - name: Create service account key file from Base64 secret
-        # ★★★ ここを正しいシークレット名に修正 ★★★
         run: echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_B64 }}" | base64 --decode > ${{ github.workspace }}/service-account-key.json
 
       - name: Install dependencies
